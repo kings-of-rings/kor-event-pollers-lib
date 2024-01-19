@@ -10,6 +10,7 @@ export class ERC20TransferPoller {
   isTestNet: boolean;
   contractsDir: string;
   transferEndpoint?: string;
+  maxBlocksQuery = 1000;
   constructor(contractAddress: string, chainId: number, lastBlockPolled: number, isTestNet: boolean) {
     this.contractAddress = contractAddress.toLowerCase();
     this.chainId = chainId;
@@ -34,6 +35,7 @@ export class ERC20TransferPoller {
       const data = contractDoc.data();
       const rpc = data?.rpc;
       this.transferEndpoint = data?.transferEndpoint;
+      this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
       if (!rpc) {
         throw new Error("No rpc url found");
       }
