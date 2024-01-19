@@ -21,8 +21,6 @@ export class ERC20TransferPoller {
 
   async pollBlocks(db: admin.firestore.Firestore, apiKey: string) {
     const provider = await this._getProvider(db);
-    console.log('provider ', provider);
-    console.log('pollBlocks1');
     if (!provider) {
       throw new Error("No provider found");
     }
