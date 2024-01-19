@@ -5,7 +5,7 @@ on:
       - main
 env:
   GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}               # set this to the name of the container in the
-
+  GH_TOKEN: ${{ secrets.GH_TOKEN }} 
 
 jobs:
   publish-gpr:
