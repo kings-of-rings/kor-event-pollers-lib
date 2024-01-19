@@ -17,7 +17,7 @@
   "author": "XDev",
   "license": "ISC",
   "dependencies": {
-    "@kings-of-rings/kor-contract-event-data-models": "^0.0.9",
+    "@kings-of-rings/kor-contract-event-data-models": "^0.0.10",
     "ethers": "^6.10.0",
     "firebase-admin": "^12.0.0"
   }
