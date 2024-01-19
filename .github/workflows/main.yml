@@ -4,7 +4,7 @@ on:
     branches:
       - main
 env:
-  GH_TOKEN: ${{ secrets.GH_TOKEN }}               # set this to the name of the container in the
+  GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}               # set this to the name of the container in the
 
 
 jobs:
@@ -21,4 +21,4 @@ jobs:
       - run: npm run build
       - run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.GH_TOKEN}}
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
