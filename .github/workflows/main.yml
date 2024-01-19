@@ -1,0 +1,24 @@
+name: Node.js Package
+on:
+  push:
+    branches:
+      - main
+env:
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}               # set this to the name of the container in the
+
+
+jobs:
+  publish-gpr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+          registry-url: https://npm.pkg.github.com/
+          scope: '@kings-of-rings'
+      - run: npm ci
+      - run: npm run build
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.GH_TOKEN}}

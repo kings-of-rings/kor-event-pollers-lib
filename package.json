@@ -1,0 +1,24 @@
+{
+  "name": "@kings-of-rings/kor-event-pollers-lib",
+  "version": "0.0.1",
+  "description": "",
+  "main": "lib/index.js",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "types": "lib",
+  "scripts": {
+    "build": "tsc -p ."
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.6",
+    "typescript": "^4.4.2"
+  },
+  "author": "XDev",
+  "license": "ISC",
+  "dependencies": {
+    "@kings-of-rings/kor-contract-event-data-models": "^0.0.9",
+    "ethers": "^6.10.0",
+    "firebase-admin": "^12.0.0"
+  }
+}
