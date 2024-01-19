@@ -5,14 +5,14 @@ type ContractData = {
   lastBlockPolled: number;
 }
 
-export class ERC20PollManager {
+export class ERC1155PollManager {
   chainId: number;
   directoryDoc: string;
   pollingPath: string;
   constructor(chainId: number, isTestNet: boolean) {
     this.chainId = chainId;
-    this.directoryDoc = isTestNet ? "erc20_testnet" : "erc20_mainnet";
-    this.pollingPath = isTestNet ? "polling/erc20/transfers_testnet" : "polling/erc20/transfers_mainnet";
+    this.directoryDoc = isTestNet ? "erc1155_testnet" : "erc1155_mainnet";
+    this.pollingPath = isTestNet ? "polling/erc1155/transfers_testnet" : "polling/erc1155/transfers_mainnet";
   };
 
   async checkContracts(db: admin.firestore.Firestore) {
@@ -48,8 +48,8 @@ export class ERC20PollManager {
 }
 
 export class ERC20PollManagerFactory {
-  static async checkContracts(chainId: number, isTestNet: boolean, db: admin.firestore.Firestore): Promise<ERC20PollManager> {
-    const itemToReturn = new ERC20PollManager(chainId, isTestNet);
+  static async checkContracts(chainId: number, isTestNet: boolean, db: admin.firestore.Firestore): Promise<ERC1155PollManager> {
+    const itemToReturn = new ERC1155PollManager(chainId, isTestNet);
     await itemToReturn.checkContracts(db);
     return itemToReturn;
   }
