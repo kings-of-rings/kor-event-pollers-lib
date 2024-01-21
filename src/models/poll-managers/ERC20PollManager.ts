@@ -38,6 +38,10 @@ export class ERC20PollManager {
 
   async _saveRequest(contract: ContractData, db: admin.firestore.Firestore): Promise<void> {
     const ref = db.collection(this.pollingPath).doc(contract.address);
+    const result = await ref.get();
+    if (result.exists) { 
+      await ref.delete();
+    }
     const data = {
       address: contract.address,
       lastBlockPolled: contract.lastBlockPolled,
