@@ -64,7 +64,7 @@ export class ERC1155TransferSinglePoller {
 		return;
 	}
 
-	async _saveTransferEvent(log: ethers.Log, provider: ethers.providers.JsonRpcProvider, db: admin.firestore.Firestore, apiKey: string): Promise<unknown> {
+	async _saveTransferEvent(log: any, provider: ethers.providers.JsonRpcProvider, db: admin.firestore.Firestore, apiKey: string): Promise<unknown> {
 		const transferEvent = new Erc1155TransferSingle(log, this.chainId);
 		if (this.transferEndpoint) {
 			return await transferEvent.saveData(this.transferEndpoint, apiKey, provider);
