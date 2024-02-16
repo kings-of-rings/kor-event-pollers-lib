@@ -54,7 +54,7 @@ export class ERC20TransferPoller {
 		const contractFilter = transferContract.filters.Transfer();
 		const logs = await transferContract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
-			await this._saveTransferEvent(log, provider, db, apiKey);
+			await this._saveTransferEvent(log, provider, apiKey);
 		}
 		this.lastBlockPolled = currentBlock;      // update contract last block polled
 		const contractDoc = db.collection(`directory/${this.contractsDir}/contracts`).doc(this.contractAddress);
@@ -64,7 +64,7 @@ export class ERC20TransferPoller {
 		return;
 	}
 
-	async _saveTransferEvent(log: any, provider: ethers.providers.JsonRpcProvider, db: admin.firestore.Firestore, apiKey: string): Promise<unknown> {
+	async _saveTransferEvent(log: any, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
 		const transferEvent = new Erc20Transfer(log, this.chainId);
 		if (this.transferEndpoint) {
 			return await transferEvent.saveData(this.transferEndpoint, apiKey, provider);

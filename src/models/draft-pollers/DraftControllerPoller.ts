@@ -40,7 +40,7 @@ export class DraftControllerPoller {
 		if (difference > this.maxBlocksQuery) {
 			currentBlock = this.lastBlockPolled + this.maxBlocksQuery;
 		}
-		await this._pollDraftTimeSet(provider, apiKey);
+		await this._pollDraftTimeSet(currentBlock, provider, apiKey);
 		await this._pollDraftBidIncreased(currentBlock, provider, apiKey);
 		await this._pollDraftBidPlaced(currentBlock, provider, apiKey);
 		await this._pollResultsFinal(currentBlock, provider, apiKey);
@@ -76,10 +76,10 @@ export class DraftControllerPoller {
 		}
 	}
 
-	async _pollDraftTimeSet(provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollDraftTimeSet(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, DraftTimeSetAbi, provider);
 		const contractFilter = this.contract.filters.DraftTimeSet();
-		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, 'latest');
+		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
 			await this._saveDraftTimeSetEvent(log, provider, apiKey);
 		}
