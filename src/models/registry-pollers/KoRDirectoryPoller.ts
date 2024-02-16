@@ -1,4 +1,4 @@
-import { ClaimingRequirementsSet, CollectibleSeriesFaucetContractAdded, CollectibleSeriesTokenContractAdded, DraftBidIncreased, DraftBidPlaced, DraftControllerAdded, DraftPickClaimed, DraftResultsFinalized, DraftStakeClaimed, DraftTimeSet, ProTeamAdded, ProTeamChanged, RingSeriesTokenContractAdded } from "@kings-of-rings/kor-contract-event-data-models/lib";
+import { CollectibleSeriesFaucetContractAdded, CollectibleSeriesTokenContractAdded, DraftControllerAdded, RingSeriesTokenContractAdded } from "@kings-of-rings/kor-contract-event-data-models/lib";
 
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
@@ -24,7 +24,7 @@ export class KoRDirectoryPoller {
 		this.chainId = chainId;
 		this.isFootball = isFootball;
 		this.eventsDirectory = eventsDirectory;
-		this.pathName = "proTeamsRegistry";
+		this.pathName = "korDirectory";
 		this.db = db;
 	};
 
@@ -88,19 +88,19 @@ export class KoRDirectoryPoller {
 		const contractFilter = this.contract.filters.CollectibleSeriesFaucetContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
-			await this._saveCollectibleSeriesFaucetContractAddedEvent(log, provider, apiKey);
+			await this._saveCollectibleSeriesFaucetContractAddedEvent(log, apiKey);
 		}
 	}
 	async _pollCollectibleSeriesTokenContractAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
 		const contractFilter = this.contract.filters.CollectibleSeriesTokenContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
-			await this._saveCollectibleSeriesTokenContractAddedEvent(log, provider, apiKey);
+			await this._saveCollectibleSeriesTokenContractAddedEvent(log, apiKey);
 		}
 	}
 	async _saveDraftControllerAddedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new DraftControllerAdded(log, this.chainId);
-		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamAdded", this.db);
+		const endpoint = await getEndpoint(this.eventsDirectory, "draftControllerAdded", this.db);
 		if (!endpoint) {
 			throw new Error("No endpoint found for saveDraftControllerAddedEvent");
 		}
@@ -109,23 +109,23 @@ export class KoRDirectoryPoller {
 
 	async _saveRingSeriesTokenContractAddedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new RingSeriesTokenContractAdded(log, this.chainId);
-		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamChanged", this.db);
+		const endpoint = await getEndpoint(this.eventsDirectory, "ringSeriesTokenContractAdded", this.db);
 		if (!endpoint) {
 			throw new Error("No endpoint found for saveRingSeriesTokenContractAddedEvent");
 		}
 		return await event.saveData(endpoint, apiKey);
 	}
-	async _saveCollectibleSeriesFaucetContractAddedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
+	async _saveCollectibleSeriesFaucetContractAddedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new CollectibleSeriesFaucetContractAdded(log, this.chainId);
-		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamChanged", this.db);
+		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleSeriesFaucetContractAdded", this.db);
 		if (!endpoint) {
 			throw new Error("No endpoint found for saveCollectibleSeriesFaucetContractAddedEvent");
 		}
 		return await event.saveData(endpoint, apiKey);
 	}
-	async _saveCollectibleSeriesTokenContractAddedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
+	async _saveCollectibleSeriesTokenContractAddedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new CollectibleSeriesTokenContractAdded(log, this.chainId);
-		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamChanged", this.db);
+		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleSeriesTokenContractAdded", this.db);
 		if (!endpoint) {
 			throw new Error("No endpoint found for saveCollectibleSeriesTokenContractAddedEvent");
 		}
