@@ -69,6 +69,7 @@ export class CollegeRegistryPoller {
 	}
 
 	async _pollCollegeAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+		console.log('Polling CollegeAdded ', currentBlock);
 		const contractFilter = this.contract.filters.CollegeAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -90,6 +91,7 @@ export class CollegeRegistryPoller {
 		}
 	} 
 	async _saveCollegeAddedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
+		console.log('Saving CollegeAdded Event');
 		const event = new CollegeAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeAdded", this.db);
 		if (!endpoint) {
