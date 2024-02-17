@@ -62,7 +62,7 @@ export class ProRegistryPoller {
 		}
 	}
 
-	async _pollTeamAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollTeamAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, ProTeamAddedAbi, provider);
 		const contractFilter = this.contract.filters.TeamAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -70,7 +70,7 @@ export class ProRegistryPoller {
 			await this._saveTeamAddedEvent(log, provider, apiKey);
 		}
 	}
-	async _pollTeamChanged(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollTeamChanged(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, ProTeamChangedAbi, provider);
 		const contractFilter = this.contract.filters.TeamChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -78,7 +78,7 @@ export class ProRegistryPoller {
 			await this._saveTeamChangedEvent(log, provider, apiKey);
 		}
 	}
-	async _saveTeamAddedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
+	async _saveTeamAddedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new ProTeamAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamAdded", this.db);
 		if (!endpoint) {
@@ -87,7 +87,7 @@ export class ProRegistryPoller {
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 
-	async _saveTeamChangedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
+	async _saveTeamChangedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new ProTeamChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamChanged", this.db);
 		if (!endpoint) {

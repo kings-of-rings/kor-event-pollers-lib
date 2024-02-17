@@ -18,6 +18,7 @@ export class DraftControllerPoller {
 	isFootball: boolean;
 	eventsDirectory: string;
 	pathName: string;
+	paused: boolean = false;
 	contract?: ethers.Contract;
 	db: admin.firestore.Firestore;
 
@@ -31,29 +32,31 @@ export class DraftControllerPoller {
 	};
 
 	async pollBlocks(apiKey: string) {
-		const provider = await this._getProvider();
-		if (!provider) {
-			throw new Error("No provider found");
-		}
-		let currentBlock = await provider.getBlockNumber() - 1;
-		const difference = currentBlock - this.lastBlockPolled;
-		if (difference > this.maxBlocksQuery) {
-			currentBlock = this.lastBlockPolled + this.maxBlocksQuery;
-		}
-		await this._pollDraftTimeSet(currentBlock, provider, apiKey);
-		await this._pollDraftBidIncreased(currentBlock, provider, apiKey);
-		await this._pollDraftBidPlaced(currentBlock, provider, apiKey);
-		await this._pollResultsFinal(currentBlock, provider, apiKey);
-		await this._pollClaimingRequirementsSet(currentBlock, provider, apiKey);
-		await this._pollDraftPickClaimed(currentBlock, provider, apiKey);
-		await this._pollDraftStakeClaimed(currentBlock, provider, apiKey);
+		if (!this.paused) {
+			const provider = await this._getProvider();
+			if (!provider) {
+				throw new Error("No provider found");
+			}
+			let currentBlock = await provider.getBlockNumber() - 1;
+			const difference = currentBlock - this.lastBlockPolled;
+			if (difference > this.maxBlocksQuery) {
+				currentBlock = this.lastBlockPolled + this.maxBlocksQuery;
+			}
+			await this._pollDraftTimeSet(currentBlock, provider, apiKey);
+			await this._pollDraftBidIncreased(currentBlock, provider, apiKey);
+			await this._pollDraftBidPlaced(currentBlock, provider, apiKey);
+			await this._pollResultsFinal(currentBlock, provider, apiKey);
+			await this._pollClaimingRequirementsSet(currentBlock, provider, apiKey);
+			await this._pollDraftPickClaimed(currentBlock, provider, apiKey);
+			await this._pollDraftStakeClaimed(currentBlock, provider, apiKey);
 
-		this.lastBlockPolled = currentBlock;	  // update contract last block polled
-		const contractDoc = this.db.collection(`${this.eventsDirectory}/pollers/contracts`).doc(this.pathName);
-		await contractDoc.update({
-			lastBlockPolled: currentBlock,
-		});
-		return;
+			this.lastBlockPolled = currentBlock;	  // update contract last block polled
+			const contractDoc = this.db.collection(`${this.eventsDirectory}/pollers/contracts`).doc(this.pathName);
+			await contractDoc.update({
+				lastBlockPolled: currentBlock,
+			});
+			return;
+		}
 	}
 
 	async _getProvider(): Promise<ethers.providers.JsonRpcProvider | undefined> {
@@ -64,6 +67,7 @@ export class DraftControllerPoller {
 			this.lastBlockPolled = data?.lastBlockPolled;
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
+			this.paused = data?.paused || false;
 			console.log("DraftControllerPoller: ", this.contractAddress)
 			console.log("Is Football: ", this.isFootball)
 			if (!rpcUrl) {
@@ -76,7 +80,7 @@ export class DraftControllerPoller {
 		}
 	}
 
-	async _pollDraftTimeSet(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollDraftTimeSet(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, DraftTimeSetAbi, provider);
 		const contractFilter = this.contract.filters.DraftTimeSet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -84,7 +88,7 @@ export class DraftControllerPoller {
 			await this._saveDraftTimeSetEvent(log, provider, apiKey);
 		}
 	}
-	async _pollDraftBidIncreased(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollDraftBidIncreased(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, DraftBidIncreasedAbi, provider);
 		const contractFilter = this.contract.filters.DraftBidIncreased();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -92,7 +96,7 @@ export class DraftControllerPoller {
 			await this._saveDraftBidIncreasedEvent(log, provider, apiKey);
 		}
 	}
-	async _pollDraftBidPlaced(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollDraftBidPlaced(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, DraftBidPlacedAbi, provider);
 		const contractFilter = this.contract.filters.DraftBidPlaced();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -100,7 +104,7 @@ export class DraftControllerPoller {
 			await this._saveDraftBidPlacedEvent(log, provider, apiKey);
 		}
 	}
-	async _pollResultsFinal(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollResultsFinal(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, ResultsFinalAbi, provider);
 		const contractFilter = this.contract.filters.DraftResultsFinalized();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -108,7 +112,7 @@ export class DraftControllerPoller {
 			await this._saveResultsFinalEvent(log, apiKey);
 		}
 	}
-	async _pollClaimingRequirementsSet(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollClaimingRequirementsSet(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, ClaimingRequirementsSetAbi, provider);
 		const contractFilter = this.contract.filters.ClaimingRequirementsSet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -116,7 +120,7 @@ export class DraftControllerPoller {
 			await this._saveClaimingRequirementsSetEvent(log, apiKey);
 		}
 	}
-	async _pollDraftPickClaimed(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollDraftPickClaimed(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, DraftPickClaimedAbi, provider);
 		const contractFilter = this.contract.filters.DraftPickClaimed();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -124,7 +128,7 @@ export class DraftControllerPoller {
 			await this._saveDraftPickClaimedEvent(log, apiKey);
 		}
 	}
-	async _pollDraftStakeClaimed(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollDraftStakeClaimed(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, DraftStakeClaimedAbi, provider);
 		const contractFilter = this.contract.filters.DraftStakeClaimed();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -133,7 +137,7 @@ export class DraftControllerPoller {
 		}
 	}
 
-	async _saveDraftTimeSetEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
+	async _saveDraftTimeSetEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		console.log('Save Draft Time Set Event');
 		const event = new DraftTimeSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftTimeSet", this.db);
@@ -143,7 +147,7 @@ export class DraftControllerPoller {
 		return await event.saveData(endpoint, apiKey, provider);
 
 	}
-	async _saveDraftBidIncreasedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
+	async _saveDraftBidIncreasedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		console.log('Save Draft Bid Increased Event');
 		const draftBidIncreasedEvent = new DraftBidIncreased(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftBidIncreased", this.db);

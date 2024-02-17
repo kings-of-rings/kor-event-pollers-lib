@@ -44,7 +44,7 @@ export class ERC1155TransferSinglePoller {
 		}
 	}
 
-	async _pollBlocks(provider: ethers.providers.JsonRpcProvider, db: admin.firestore.Firestore, apiKey: string) {
+	async _pollBlocks(provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, db: admin.firestore.Firestore, apiKey: string) {
 		let currentBlock = await provider.getBlockNumber() - 1;
 		const difference = currentBlock - this.lastBlockPolled;
 		if (difference > 1000) {
@@ -64,7 +64,7 @@ export class ERC1155TransferSinglePoller {
 		return;
 	}
 
-	async _saveTransferEvent(log: any, provider: ethers.providers.JsonRpcProvider, db: admin.firestore.Firestore, apiKey: string): Promise<unknown> {
+	async _saveTransferEvent(log: any, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, db: admin.firestore.Firestore, apiKey: string): Promise<unknown> {
 		const transferEvent = new Erc1155TransferSingle(log, this.chainId);
 		if (this.transferEndpoint) {
 			return await transferEvent.saveData(this.transferEndpoint, apiKey, provider);

@@ -67,7 +67,7 @@ export class TeamStakePollers {
 		}
 	}
 
-	async _pollStakeAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollStakeAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.StakeAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -75,7 +75,7 @@ export class TeamStakePollers {
 			await this._saveStakeAddedEvent(log, provider, apiKey);
 		}
 	}
-	async _pollStakeClaimed(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollStakeClaimed(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.StakeClaimed();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -83,7 +83,7 @@ export class TeamStakePollers {
 			await this._saveStakeClaimedEvent(log, provider, apiKey);
 		}
 	}
-	async _pollStakingTimeSet(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollStakingTimeSet(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.StakingTimeSet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -93,7 +93,7 @@ export class TeamStakePollers {
 	}
 
 
-	async _saveStakeAddedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
+	async _saveStakeAddedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const draftBidIncreasedEvent = new TeamStakeAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "teamStakeAdded", this.db);
 		if (!endpoint) {

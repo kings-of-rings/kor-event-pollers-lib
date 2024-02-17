@@ -15,7 +15,6 @@ export class AthleteRegistryPoller {
 	contractAddress: string = "";
 	chainId: number;
 	lastBlockPolled: number = 0;
-	isFootball: boolean;
 	eventsDirectory: string;
 	pathName: string;
 	contract?: ethers.Contract;
@@ -23,9 +22,8 @@ export class AthleteRegistryPoller {
 	db: admin.firestore.Firestore;
 
 	maxBlocksQuery = 1000;
-	constructor(eventsDirectory: string, chainId: number, isFootball: boolean, db: admin.firestore.Firestore) {
+	constructor(eventsDirectory: string, chainId: number, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
-		this.isFootball = isFootball;
 		this.eventsDirectory = eventsDirectory;
 		this.pathName = "athleteRegistry";
 		this.db = db;
@@ -158,15 +156,11 @@ export class AthleteRegistryPoller {
 		}
 		return await event.saveData(endpoint, apiKey, this.ethersProvider);
 	}
-
-
-
-
 }
 
 export class AthleteRegistryPollerFactory {
-	static async runPoller(eventsDirectory: string, chainId: number, isFootball: boolean, db: admin.firestore.Firestore, apiKey: string): Promise<AthleteRegistryPoller> {
-		const pollerInstance = new AthleteRegistryPoller(eventsDirectory, chainId, isFootball, db);
+	static async runPoller(eventsDirectory: string, chainId: number, db: admin.firestore.Firestore, apiKey: string): Promise<AthleteRegistryPoller> {
+		const pollerInstance = new AthleteRegistryPoller(eventsDirectory, chainId, db);
 		await pollerInstance.pollBlocks(apiKey);
 		return pollerInstance;
 	}

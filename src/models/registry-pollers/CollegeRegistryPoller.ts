@@ -68,7 +68,7 @@ export class CollegeRegistryPoller {
 		}
 	}
 
-	async _pollCollegeAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollCollegeAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		console.log('Polling CollegeAdded ', currentBlock);
 		const contractFilter = this.contract.filters.CollegeAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -76,21 +76,21 @@ export class CollegeRegistryPoller {
 			await this._saveCollegeAddedEvent(log, provider, apiKey);
 		}
 	}
-	async _pollCollegeChanged(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollCollegeChanged(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		const contractFilter = this.contract.filters.CollegeChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
 			await this._saveCollegeChangedEvent(log, provider, apiKey);
 		}
 	}
-	async _pollTierChanged(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollTierChanged(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		const contractFilter = this.contract.filters.TierChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
 			await this._saveTierChangedEvent(log, provider, apiKey);
 		}
-	} 
-	async _saveCollegeAddedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
+	}
+	async _saveCollegeAddedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		console.log('Saving CollegeAdded Event');
 		const event = new CollegeAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeAdded", this.db);
@@ -100,7 +100,7 @@ export class CollegeRegistryPoller {
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 
-	async _saveCollegeChangedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
+	async _saveCollegeChangedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new CollegeChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeChanged", this.db);
 		if (!endpoint) {
@@ -109,14 +109,14 @@ export class CollegeRegistryPoller {
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 
-	async _saveTierChangedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider, apiKey: string): Promise<unknown> {
+	async _saveTierChangedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new TierChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeTierChanged", this.db);
 		if (!endpoint) {
 			throw new Error("No endpoint found for saveTierChangedEvent");
 		}
 		return await event.saveData(endpoint, apiKey, provider);
-	} 
+	}
 }
 
 export class CollegeRegistryPollerFactory {

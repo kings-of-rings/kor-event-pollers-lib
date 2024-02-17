@@ -19,7 +19,7 @@ export class KoRDirectoryPoller {
 	db: admin.firestore.Firestore;
 
 	maxBlocksQuery = 1000;
-	constructor(eventsDirectory: string, chainId: number,  db: admin.firestore.Firestore) {
+	constructor(eventsDirectory: string, chainId: number, db: admin.firestore.Firestore) {
 		this.chainId = chainId;
 		this.eventsDirectory = eventsDirectory;
 		this.pathName = "korDirectory";
@@ -82,14 +82,14 @@ export class KoRDirectoryPoller {
 			await this._saveRingSeriesTokenContractAddedEvent(log, apiKey);
 		}
 	}
-	async _pollCollectibleSeriesFaucetContractAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollCollectibleSeriesFaucetContractAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		const contractFilter = this.contract.filters.CollectibleSeriesFaucetContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
 			await this._saveCollectibleSeriesFaucetContractAddedEvent(log, apiKey);
 		}
 	}
-	async _pollCollectibleSeriesTokenContractAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider, apiKey: string) {
+	async _pollCollectibleSeriesTokenContractAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
 		const contractFilter = this.contract.filters.CollectibleSeriesTokenContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -132,7 +132,7 @@ export class KoRDirectoryPoller {
 }
 
 export class KoRDirectoryPollerFactory {
-	static async runPoller(eventsDirectory: string, chainId: number,  db: admin.firestore.Firestore, apiKey: string): Promise<KoRDirectoryPoller> {
+	static async runPoller(eventsDirectory: string, chainId: number, db: admin.firestore.Firestore, apiKey: string): Promise<KoRDirectoryPoller> {
 		const pollerInstance = new KoRDirectoryPoller(eventsDirectory, chainId, db);
 		await pollerInstance.pollBlocks(apiKey);
 		return pollerInstance;
