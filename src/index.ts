@@ -6,3 +6,4 @@ export * from './models/registry-pollers/AthleteRegistryPoller';
 export * from './models/registry-pollers/CollegeRegistryPoller';
 export * from './models/registry-pollers/ProRegistryPoller';
 export * from './models/registry-pollers/KoRDirectoryPoller';
+export * from './models/staking-pollers/TeamStakePollers';

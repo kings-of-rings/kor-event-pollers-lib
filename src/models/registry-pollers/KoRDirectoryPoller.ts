@@ -13,16 +13,14 @@ export class KoRDirectoryPoller {
 	contractAddress: string = "";
 	chainId: number;
 	lastBlockPolled: number = 0;
-	isFootball: boolean;
 	eventsDirectory: string;
 	pathName: string;
 	contract?: ethers.Contract;
 	db: admin.firestore.Firestore;
 
 	maxBlocksQuery = 1000;
-	constructor(eventsDirectory: string, chainId: number, isFootball: boolean, db: admin.firestore.Firestore) {
+	constructor(eventsDirectory: string, chainId: number,  db: admin.firestore.Firestore) {
 		this.chainId = chainId;
-		this.isFootball = isFootball;
 		this.eventsDirectory = eventsDirectory;
 		this.pathName = "korDirectory";
 		this.db = db;
@@ -134,8 +132,8 @@ export class KoRDirectoryPoller {
 }
 
 export class KoRDirectoryPollerFactory {
-	static async runPoller(eventsDirectory: string, chainId: number, isFootball: boolean, db: admin.firestore.Firestore, apiKey: string): Promise<KoRDirectoryPoller> {
-		const pollerInstance = new KoRDirectoryPoller(eventsDirectory, chainId, isFootball, db);
+	static async runPoller(eventsDirectory: string, chainId: number,  db: admin.firestore.Firestore, apiKey: string): Promise<KoRDirectoryPoller> {
+		const pollerInstance = new KoRDirectoryPoller(eventsDirectory, chainId, db);
 		await pollerInstance.pollBlocks(apiKey);
 		return pollerInstance;
 	}
