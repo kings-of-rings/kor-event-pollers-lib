@@ -38,6 +38,7 @@ export class PollerManager {
 	async pollOnce() {
 		await this._loadSettings();
 		await this._checkContracts();
+		return;
 	}
 
 	//Use this Method if the Poll Manager will remain active and poll for new contracts
