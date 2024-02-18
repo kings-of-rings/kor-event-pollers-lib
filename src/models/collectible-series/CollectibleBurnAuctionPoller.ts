@@ -1,5 +1,5 @@
 
-import { DraftTimeSet, DraftBidIncreased, DraftBidPlaced } from "@kings-of-rings/kor-contract-event-data-models/lib";
+import { DraftTimeSet, DraftBidIncreased, DraftBidPlaced, BurnBidPlaced, BurnBidIncreased, BurnAuctionTimeSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
@@ -119,7 +119,7 @@ export class CollectibleBurnAuctionPoller {
 	}
 
 	async _saveBurnBidIncreasedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
-		const event = new DraftTimeSet(log, this.chainId);
+		const event = new BurnBidIncreased(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnBidIncreased", this.db);
 		if (!endpoint) {
 			throw new Error("No endpoint found for save burn bid increased event");
@@ -128,21 +128,21 @@ export class CollectibleBurnAuctionPoller {
 
 	}
 	async _saveBurnBidPlacedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
-		const draftBidIncreasedEvent = new DraftBidIncreased(log, this.chainId);
+		const event = new BurnBidPlaced(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnBidPlaced", this.db);
 		if (!endpoint) {
 			throw new Error("No endpoint found for save burn bid placed event");
 		}
-		return await draftBidIncreasedEvent.saveData(endpoint, apiKey, provider);
+		return await event.saveData(endpoint, apiKey, provider);
 
 	}
 	async _saveBurnAuctionTimeSetEvent(log: ethers.Event, provider: any, apiKey: string): Promise<unknown> {
-		const draftBidPlacedEvent = new DraftBidPlaced(log, this.chainId);
+		const event = new BurnAuctionTimeSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnAuctionTimeSet", this.db);
 		if (!endpoint) {
 			throw new Error("No endpoint found for save burn auction time set event");
 		}
-		return await draftBidPlacedEvent.saveData(endpoint, apiKey, provider);
+		return await event.saveData(endpoint, apiKey);
 	}
 
 	async _saveRemoveBidEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
