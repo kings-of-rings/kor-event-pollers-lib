@@ -69,7 +69,6 @@ export class KoRDirectoryPoller {
 	}
 
 	async _pollDraftControllerAddedAdded(currentBlock: number, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
 		const contractFilter = this.contract.filters.DraftControllerAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -77,7 +76,6 @@ export class KoRDirectoryPoller {
 		}
 	}
 	async _pollRingSeriesTokenContractAddedChanged(currentBlock: number, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
 		const contractFilter = this.contract.filters.RingSeriesTokenContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

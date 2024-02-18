@@ -2,8 +2,10 @@ import { ProTeamAdded, ProTeamChanged } from "@kings-of-rings/kor-contract-event
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
-const ProTeamAddedAbi = ["event TeamAdded(uint256 indexed _teamId, bool indexed _isFootball, string _name, string _mascot,  string _conference)"];
-const ProTeamChangedAbi = ["event TeamChanged(uint256 indexed _teamId, bool indexed _isFootball, string _name, string _mascot, string _conference)"];
+const EventsAbi = [
+	"event TeamAdded(uint256 indexed _teamId, bool indexed _isFootball, string _name, string _mascot,  string _conference)",
+	"event TeamChanged(uint256 indexed _teamId, bool indexed _isFootball, string _name, string _mascot, string _conference)"
+];
 
 export class ProRegistryPoller {
 	contractAddress: string = "";
@@ -27,7 +29,7 @@ export class ProRegistryPoller {
 		if (!provider) {
 			throw new Error("No provider found");
 		}
-		this.contract = new ethers.Contract(this.contractAddress, ProTeamAddedAbi, provider);
+		this.contract = new ethers.Contract(this.contractAddress, EventsAbi, provider);
 		let currentBlock = await provider.getBlockNumber() - 1;
 		const difference = currentBlock - this.lastBlockPolled;
 		if (difference > this.maxBlocksQuery) {
