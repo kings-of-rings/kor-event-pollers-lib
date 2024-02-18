@@ -19,12 +19,13 @@ export class PollerManager {
 	constructor(eventsDirectory: string, db: admin.firestore.Firestore) {
 		this.eventsDirectory = eventsDirectory;
 		this.db = db;
+		this.pollContinuously = this.pollContinuously.bind(this);
+
 	};
 
 	async _loadSettings() {
 		const settingsDoc = await this.db.collection(this.eventsDirectory).doc("pollers").get();
 		const data: Record<string, any> | undefined = settingsDoc.data();
-		console.log("Settings Data: ", data);
 		if (data) {
 			this.chainId = data.chainId;
 			this.contractsPerPoll = data.contractsPerPoll;
@@ -40,6 +41,7 @@ export class PollerManager {
 
 	//Use this Method if the Poll Manager will remain active and poll for new contracts
 	pollContinuously() {
+		console.log("Polling Continuously");
 		this.db.collection(this.eventsDirectory).doc("pollers")
 			.onSnapshot((doc) => {
 				const data: Record<string, any> | undefined = doc.data();
@@ -60,8 +62,6 @@ export class PollerManager {
 
 	async _checkContracts() {
 		const contractsToPoll = await this._getContractsToPoll();
-		console.log("Contracts to Poll: ", contractsToPoll.length);
-		console.log("Contracts to Poll: ", contractsToPoll);
 		for (const contract of contractsToPoll) {
 			await this._pollContract(contract);
 		}
@@ -90,7 +90,6 @@ export class PollerManager {
 	}
 
 	async _pollContract(contract: PollContractData) {
-		console.log("Poll contract: ", contract);
 		await DynamicFunctionSelectorFactory.pollContract(contract, this.eventsDirectory, this.chainId, this.db);
 	}
 }
@@ -107,10 +106,3 @@ export class PollerManagerFactory {
 		return itemToReturn;
 	}
 }
-
-
-
-
-
-
-
