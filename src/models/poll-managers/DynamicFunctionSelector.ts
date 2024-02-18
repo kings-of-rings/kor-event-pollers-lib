@@ -47,7 +47,7 @@ export class DynamicFunctionSelector {
 			athleteRegistry: this.athleteRegistry.bind(this),
 			collegeRegistry: this.collegeRegistry.bind(this),
 			korDirectory: this.korDirectory.bind(this),
-			proRegistry: this.proRegistry.bind(this),
+			proTeamsRegistry: this.proTeamsRegistry.bind(this),
 			athletePaymentManager: this.athletePaymentManager.bind(this),
 			//Staking Functions
 			teamStakingCurrent: this.teamStakingCurrent.bind(this),
@@ -71,7 +71,9 @@ export class DynamicFunctionSelector {
 			//Ring Series Functions
 			collegeRingSeriesNft: this.collegeRingSeriesNft.bind(this),
 			proRingSeriesNft: this.proRingSeriesNft.bind(this),
-			ringSeriesManager: this.ringSeriesManager.bind(this)
+			ringSeriesManager: this.ringSeriesManager.bind(this),
+			//Revenue Manager
+			// revenueManager: this.revenueManager.bind(this),
 		};
 	}
 
@@ -96,7 +98,7 @@ export class DynamicFunctionSelector {
 	async korDirectory() {
 		await KoRDirectoryPollerFactory.runPoller(this.eventsDirectory, this.chainId, this.db, this.apiKey);
 	}
-	async proRegistry() {
+	async proTeamsRegistry() {
 		await ProRegistryPollerFactory.runPoller(this.eventsDirectory, this.chainId, this.db, this.apiKey);
 	}
 	//#endregion
