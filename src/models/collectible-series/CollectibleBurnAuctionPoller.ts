@@ -5,10 +5,10 @@ import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
 
 const EVENTS_ABI = [
-	"event BurnBidIncreased(uint256 _bidId,address _bidder,uint256 _tokenId,uint256 _increasedAmount,uint256 _totalBid, uint16 _year,bool _isFootball)",
-	"event BurnBidPlaced(uint256 _bidId,address _bidder,uint256 _tokenId,uint256 _bidAmount,uint256 _bidCount,uint16 _year,bool _isFootball)",
+	"event BurnBidIncreased(uint256 indexed _bidId,address indexed _bidder,uint256 indexed _tokenId,uint256 _increasedAmount,uint256 _totalBid, uint16 _year,bool _isFootball)",
+	"event BurnBidPlaced(uint256 indexed _bidId,address indexed _bidder,uint256 indexed _tokenId,uint256 _bidAmount,uint256 _bidCount,uint16 _year,bool _isFootball)",
 	"event BurnAuctionTimeSet(uint16 _year, bool _isFootball, uint256 _start, uint256 _end)",
-	"event RemoveBid(uint256 _bidId,address _bidder,uint256 _tokenId,uint256 _bidAmount,uint256 _year,bool _isFootball)"
+	"event RemoveBid(uint256 indexed _bidId,address indexed _bidder,uint256 indexed _tokenId,uint256 _bidAmount,uint256 _year,bool _isFootball)"
 ];
 
 export class CollectibleBurnAuctionPoller {
@@ -47,7 +47,7 @@ export class CollectibleBurnAuctionPoller {
 			await this._pollBurnBidIncreased(currentBlock, provider, apiKey);
 			await this._pollBurnBidPlaced(currentBlock, provider, apiKey);
 			await this._pollBurnAuctionTimeSet(currentBlock, provider, apiKey);
-			await this._pollRemoveBid(currentBlock, provider, apiKey);
+			await this._pollRemoveBid(currentBlock, apiKey);
 
 			this.lastBlockPolled = currentBlock;	  // update contract last block polled
 			const contractDoc = this.db.collection(`${this.eventsDirectory}/pollers/contracts`).doc(this.docName);
@@ -107,7 +107,7 @@ export class CollectibleBurnAuctionPoller {
 			await this._saveBurnAuctionTimeSetEvent(log, provider, apiKey);
 		}
 	}
-	async _pollRemoveBid(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+	async _pollRemoveBid(currentBlock: number, apiKey: string) {
 		if (!this.contract) {
 			throw new Error("No contract found");
 		}

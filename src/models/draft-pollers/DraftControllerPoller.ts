@@ -68,8 +68,6 @@ export class DraftControllerPoller {
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
 			this.paused = data?.paused || false;
-			console.log("DraftControllerPoller: ", this.contractAddress)
-			console.log("Is Football: ", this.isFootball)
 			if (!rpcUrl) {
 				throw new Error("No rpc url found");
 			}
