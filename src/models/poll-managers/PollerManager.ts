@@ -14,6 +14,7 @@ export class PollerManager {
 	pollDelay: number = 10000;
 	contractsPerPoll: number = 5;
 	eventsDirectory: string;
+	isPolling: boolean = false;
 	contractsToPoll: PollContractData[] = [];
 	db: admin.firestore.Firestore;
 	constructor(eventsDirectory: string, db: admin.firestore.Firestore) {
@@ -56,7 +57,11 @@ export class PollerManager {
 
 	async _startPoller() {
 		setInterval(async () => {
-			await this._checkContracts();
+			if (!this.isPolling) {
+				this.isPolling = true;
+				await this._checkContracts();
+				this.isPolling = false;
+			}
 		}, this.pollDelay);
 	}
 
