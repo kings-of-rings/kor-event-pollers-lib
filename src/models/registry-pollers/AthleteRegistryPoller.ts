@@ -62,6 +62,7 @@ export class AthleteRegistryPoller {
 			this.lastBlockPolled = data?.lastBlockPolled;
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
+			this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
 			if (!rpcUrl) {
 				throw new Error("No rpc url found");
 			}
@@ -73,7 +74,9 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollActiveYearAdded(currentBlock: number, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
+		if (!this.contract) {
+			throw new Error("No contract found");
+		};
 		const contractFilter = this.contract.filters.ActiveYearAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -82,7 +85,9 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteAdded(currentBlock: number, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
+		if (!this.contract) {
+			throw new Error("No contract found");
+		};
 		const contractFilter = this.contract.filters.AthleteAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -91,7 +96,9 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteNameChanged(currentBlock: number, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
+		if (!this.contract) {
+			throw new Error("No contract found");
+		};
 		const contractFilter = this.contract.filters.AthleteNameChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -100,7 +107,9 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteCollegeChanged(currentBlock: number, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
+		if (!this.contract) {
+			throw new Error("No contract found");
+		};
 		const contractFilter = this.contract.filters.AthleteCollegeChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -109,7 +118,9 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteProTeamChanged(currentBlock: number, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
+		if (!this.contract) {
+			throw new Error("No contract found");
+		};
 		const contractFilter = this.contract.filters.AthleteProTeamChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

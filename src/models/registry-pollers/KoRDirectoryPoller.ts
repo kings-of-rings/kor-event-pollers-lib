@@ -85,7 +85,9 @@ export class KoRDirectoryPoller {
 		}
 	}
 	async _pollCollectibleSeriesFaucetContractAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
+		if (!this.contract) {
+			throw new Error("No contract found");
+		};
 		const contractFilter = this.contract.filters.CollectibleSeriesFaucetContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -93,7 +95,9 @@ export class KoRDirectoryPoller {
 		}
 	}
 	async _pollCollectibleSeriesTokenContractAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
+		if (!this.contract) {
+			throw new Error("No contract found");
+		};
 		const contractFilter = this.contract.filters.CollectibleSeriesTokenContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

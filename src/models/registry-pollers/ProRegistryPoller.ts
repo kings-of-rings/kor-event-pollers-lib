@@ -27,6 +27,7 @@ export class ProRegistryPoller {
 		if (!provider) {
 			throw new Error("No provider found");
 		}
+		this.contract = new ethers.Contract(this.contractAddress, ProTeamAddedAbi, provider);
 		let currentBlock = await provider.getBlockNumber() - 1;
 		const difference = currentBlock - this.lastBlockPolled;
 		if (difference > this.maxBlocksQuery) {
@@ -62,7 +63,6 @@ export class ProRegistryPoller {
 	}
 
 	async _pollTeamAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, ProTeamAddedAbi, provider);
 		const contractFilter = this.contract.filters.TeamAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -70,7 +70,6 @@ export class ProRegistryPoller {
 		}
 	}
 	async _pollTeamChanged(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, ProTeamChangedAbi, provider);
 		const contractFilter = this.contract.filters.TeamChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
