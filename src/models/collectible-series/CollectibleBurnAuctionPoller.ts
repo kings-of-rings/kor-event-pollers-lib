@@ -1,5 +1,5 @@
-import { ClaimingRequirementsSet, DraftBidIncreased, DraftBidPlaced, DraftPickClaimed, DraftResultsFinalized, DraftStakeClaimed, DraftTimeSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
 
+import { DraftTimeSet, DraftBidIncreased, DraftBidPlaced } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
@@ -78,6 +78,9 @@ export class CollectibleBurnAuctionPoller {
 	}
 
 	async _pollBurnBidIncreased(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		if (!this.contract) {
+			throw new Error("No contract found");
+		}
 		const contractFilter = this.contract.filters.BurnBidIncreased();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -85,6 +88,9 @@ export class CollectibleBurnAuctionPoller {
 		}
 	}
 	async _pollBurnBidPlaced(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		if (!this.contract) {
+			throw new Error("No contract found");
+		}
 		const contractFilter = this.contract.filters.BurnBidPlaced();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -92,6 +98,9 @@ export class CollectibleBurnAuctionPoller {
 		}
 	}
 	async _pollBurnAuctionTimeSet(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		if (!this.contract) {
+			throw new Error("No contract found");
+		}
 		const contractFilter = this.contract.filters.BurnAuctionTimeSet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -99,6 +108,9 @@ export class CollectibleBurnAuctionPoller {
 		}
 	}
 	async _pollRemoveBid(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		if (!this.contract) {
+			throw new Error("No contract found");
+		}
 		const contractFilter = this.contract.filters.RemoveBid();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

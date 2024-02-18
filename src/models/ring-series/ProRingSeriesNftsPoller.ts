@@ -1,5 +1,5 @@
-import { AccessCreditsAddressSet, AthletePriceSet, ClaimingRequirementsSet, CollectibleFaucetSale, CollectibleFaucetTimeSet, DraftBidIncreased, DraftBidPlaced, DraftPickClaimed, DraftResultsFinalized, DraftStakeClaimed, DraftTimeSet, FaucetLevelAdded, TokenUriSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
 
+import { TokenUriSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
@@ -65,6 +65,7 @@ export class ProRingSeriesNftsPoller {
 	}
 
 	async _pollTokenUriSet(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.TokenUriSet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

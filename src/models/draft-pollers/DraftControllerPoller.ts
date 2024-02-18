@@ -1,5 +1,5 @@
-import { ClaimingRequirementsSet, DraftBidIncreased, DraftBidPlaced, DraftPickClaimed, DraftResultsFinalized, DraftStakeClaimed, DraftTimeSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
 
+import { DraftTimeSet, DraftBidIncreased, DraftBidPlaced, DraftResultsFinalized, ClaimingRequirementsSet, DraftPickClaimed, DraftStakeClaimed } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";

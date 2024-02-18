@@ -1,5 +1,5 @@
-import { ClaimingRequirementsSet, CollegeAdded, CollegeChanged, DraftBidIncreased, DraftBidPlaced, DraftPickClaimed, DraftResultsFinalized, DraftStakeClaimed, DraftTimeSet, ProTeamAdded, ProTeamChanged, TierChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
 
+import { CollegeAdded, CollegeChanged, TierChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
@@ -69,7 +69,7 @@ export class CollegeRegistryPoller {
 	}
 
 	async _pollCollegeAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		console.log('Polling CollegeAdded ', currentBlock);
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.CollegeAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -77,6 +77,7 @@ export class CollegeRegistryPoller {
 		}
 	}
 	async _pollCollegeChanged(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.CollegeChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -84,6 +85,7 @@ export class CollegeRegistryPoller {
 		}
 	}
 	async _pollTierChanged(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.TierChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

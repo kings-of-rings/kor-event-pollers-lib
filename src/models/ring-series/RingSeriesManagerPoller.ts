@@ -1,5 +1,5 @@
-import {  AthleteRingSeriesEligibilitySet, AthleteRingSeriesQtySet, DraftBidIncreased, DraftBidPlaced,   DraftTimeSet, RingSeriesYearAdded } from "@kings-of-rings/kor-contract-event-data-models/lib";
 
+import { AthleteRingSeriesQtySet, AthleteRingSeriesEligibilitySet, RingSeriesYearAdded } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
@@ -14,7 +14,6 @@ export class RingSeriesManagerPoller {
 	contractAddress: string = "";
 	chainId: number;
 	lastBlockPolled: number = 0;
-	isFootball: boolean;
 	eventsDirectory: string;
 	docName: string = "ringSeriesManager";
 	paused: boolean = false;
@@ -74,6 +73,7 @@ export class RingSeriesManagerPoller {
 	}
 
 	async _pollAthleteRingSeriesQtySet(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.AthleteRingSeriesQtySet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -81,6 +81,7 @@ export class RingSeriesManagerPoller {
 		}
 	}
 	async _pollAthleteRingSeriesEligibilitySet(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.AthleteRingSeriesEligibilitySet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -88,6 +89,7 @@ export class RingSeriesManagerPoller {
 		}
 	}
 	async _pollRingSeriesYearAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.RingSeriesYearAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

@@ -1,5 +1,5 @@
-import { AccessCreditsAddressSet, AthletePriceSet, ClaimingRequirementsSet, CollectibleFaucetSale, CollectibleFaucetTimeSet, DraftBidIncreased, DraftBidPlaced, DraftPickClaimed, DraftResultsFinalized, DraftStakeClaimed, DraftTimeSet, FaucetLevelAdded, FaucetTargetPrice, NilAddLiquidityProcedure, TokenFaucetSale, TokenUriSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
 
+import { FaucetTargetPrice, TokenFaucetSale } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
@@ -30,7 +30,6 @@ export class NILCoinFaucetPoller {
 			if (!provider) {
 				throw new Error("No provider found");
 			}
-			this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 			let currentBlock = await provider.getBlockNumber() - 1;
 			const difference = currentBlock - this.lastBlockPolled;
 			if (difference > this.maxBlocksQuery) {
@@ -68,6 +67,7 @@ export class NILCoinFaucetPoller {
 	}
 
 	async _pollFaucetTargetPrice(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.FaucetTargetPrice();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -75,6 +75,7 @@ export class NILCoinFaucetPoller {
 		}
 	}
 	async _pollTokenFaucetSale(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.TokenFaucetSale();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

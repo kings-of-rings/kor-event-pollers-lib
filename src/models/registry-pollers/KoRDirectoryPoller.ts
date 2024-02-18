@@ -1,5 +1,5 @@
-import { CollectibleSeriesFaucetContractAdded, CollectibleSeriesTokenContractAdded, DraftControllerAdded, RingSeriesTokenContractAdded } from "@kings-of-rings/kor-contract-event-data-models/lib";
 
+import { DraftControllerAdded, RingSeriesTokenContractAdded, CollectibleSeriesFaucetContractAdded, CollectibleSeriesTokenContractAdded } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
@@ -69,6 +69,7 @@ export class KoRDirectoryPoller {
 	}
 
 	async _pollDraftControllerAddedAdded(currentBlock: number, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
 		const contractFilter = this.contract.filters.DraftControllerAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -76,6 +77,7 @@ export class KoRDirectoryPoller {
 		}
 	}
 	async _pollRingSeriesTokenContractAddedChanged(currentBlock: number, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
 		const contractFilter = this.contract.filters.RingSeriesTokenContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -83,6 +85,7 @@ export class KoRDirectoryPoller {
 		}
 	}
 	async _pollCollectibleSeriesFaucetContractAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.CollectibleSeriesFaucetContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -90,6 +93,7 @@ export class KoRDirectoryPoller {
 		}
 	}
 	async _pollCollectibleSeriesTokenContractAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.CollectibleSeriesTokenContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

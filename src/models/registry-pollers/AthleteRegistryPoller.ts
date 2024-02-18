@@ -1,5 +1,5 @@
-import { AthleteActiveYearAdded, AthleteAdded, AthleteCollegeChanged, AthleteNameChanged, AthleteProTeamChanged } from "@kings-of-rings/kor-contract-event-data-models/lib";
 
+import { AthleteAdded, AthleteNameChanged, AthleteCollegeChanged, AthleteProTeamChanged, AthleteActiveYearAdded } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
@@ -73,6 +73,7 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollActiveYearAdded(currentBlock: number, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
 		const contractFilter = this.contract.filters.ActiveYearAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -81,6 +82,7 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteAdded(currentBlock: number, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
 		const contractFilter = this.contract.filters.AthleteAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -89,6 +91,7 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteNameChanged(currentBlock: number, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
 		const contractFilter = this.contract.filters.AthleteNameChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -97,6 +100,7 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteCollegeChanged(currentBlock: number, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
 		const contractFilter = this.contract.filters.AthleteCollegeChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -105,6 +109,7 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteProTeamChanged(currentBlock: number, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
 		const contractFilter = this.contract.filters.AthleteProTeamChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

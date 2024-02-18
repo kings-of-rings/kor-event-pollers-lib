@@ -1,5 +1,5 @@
-import { AccessCreditsAddressSet, AthletePriceSet, ClaimingRequirementsSet, CollectibleFaucetSale, CollectibleFaucetTimeSet, DraftBidIncreased, DraftBidPlaced, DraftPickClaimed, DraftResultsFinalized, DraftStakeClaimed, DraftTimeSet, FaucetLevelAdded, NilAddLiquidityProcedure, TokenUriSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
 
+import { NilAddLiquidityProcedure } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
@@ -29,7 +29,6 @@ export class LPManagerPoller {
 			if (!provider) {
 				throw new Error("No provider found");
 			}
-			this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 			let currentBlock = await provider.getBlockNumber() - 1;
 			const difference = currentBlock - this.lastBlockPolled;
 			if (difference > this.maxBlocksQuery) {
@@ -66,6 +65,7 @@ export class LPManagerPoller {
 	}
 
 	async _pollNilAddLiquidityProcedure(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		const contractFilter = this.contract.filters.NilAddLiquidityProcedure();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

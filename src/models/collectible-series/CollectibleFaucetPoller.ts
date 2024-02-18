@@ -1,5 +1,5 @@
-import { AccessCreditsAddressSet, AthletePriceSet, ClaimingRequirementsSet, CollectibleFaucetSale, CollectibleFaucetTimeSet, DraftBidIncreased, DraftBidPlaced, DraftPickClaimed, DraftResultsFinalized, DraftStakeClaimed, DraftTimeSet, FaucetLevelAdded } from "@kings-of-rings/kor-contract-event-data-models/lib";
 
+import { AccessCreditsAddressSet, AthletePriceSet, CollectibleFaucetTimeSet, FaucetLevelAdded, CollectibleFaucetSale } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
@@ -77,6 +77,9 @@ export class CollectibleFaucetPoller {
 	}
 
 	async _pollAccessCreditsAddress(currentBlock: number, apiKey: string) {
+		if (!this.contract) {
+			throw new Error("No contract found");
+		}
 
 		const contractFilter = this.contract.filters.AccessCreditsAddress();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
@@ -85,6 +88,9 @@ export class CollectibleFaucetPoller {
 		}
 	}
 	async _pollAthletePriceSet(currentBlock: number, apiKey: string) {
+		if (!this.contract) {
+			throw new Error("No contract found");
+		}
 		const contractFilter = this.contract.filters.AthletePriceSet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -92,6 +98,9 @@ export class CollectibleFaucetPoller {
 		}
 	}
 	async _pollCollectibleFaucetTimeSet(currentBlock: number, apiKey: string) {
+		if (!this.contract) {
+			throw new Error("No contract found");
+		}
 		const contractFilter = this.contract.filters.CollectibleFaucetTimeSet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -99,6 +108,9 @@ export class CollectibleFaucetPoller {
 		}
 	}
 	async _pollLevelAdded(currentBlock: number, apiKey: string) {
+		if (!this.contract) {
+			throw new Error("No contract found");
+		}
 		const contractFilter = this.contract.filters.LevelAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -106,6 +118,9 @@ export class CollectibleFaucetPoller {
 		}
 	}
 	async _pollCollectibleFaucetSale(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
+		if (!this.contract) {
+			throw new Error("No contract found");
+		}
 		const contractFilter = this.contract.filters.CollectibleFaucetSale();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {

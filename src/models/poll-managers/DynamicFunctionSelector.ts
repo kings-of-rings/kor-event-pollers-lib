@@ -5,12 +5,31 @@ import { CollegeRegistryPollerFactory } from "../registry-pollers/CollegeRegistr
 import { KoRDirectoryPollerFactory } from "../registry-pollers/KoRDirectoryPoller";
 import { ProRegistryPollerFactory } from "../registry-pollers/ProRegistryPoller";
 import { TeamStakePollersFactory } from "../staking-pollers/TeamStakePollers";
+import { CollectibleBurnAuctionPollerFactory } from "../collectible-series/CollectibleBurnAuctionPoller";
+import { CollectibleFaucetPollerFactory } from "../collectible-series/CollectibleFaucetPoller";
+import { CollectibleNftsPollerFactory } from "../collectible-series/CollectibleNftsPoller";
+import { RingSeriesManagerPollerFactory } from "../ring-series/RingSeriesManagerPoller";
+import { ProRingSeriesNftsPollerFactory } from "../ring-series/ProRingSeriesNftsPoller";
+import { DraftPickNftsPollerFactory } from "../draft-pollers/DraftPickNftsPoller";
+import { CollegeRingSeriesNftsPollerFactory } from "../ring-series/CollegeRingSeriesNftsPoller";
 
+import { LPManagerPollerFactory } from "../nil-coin-pollers/LPManagerPoller";
+import { NILCoinFaucetPollerFactory } from "../nil-coin-pollers/NILCoinFaucetPoller";
+import { DraftControllerPollerFactory } from "../draft-pollers/DraftControllerPoller";
+
+type PollContractData = {
+	contractName: string;
+	contractAddress: string;
+	lastBlockPolled: number;
+	maxBlocksQuery: number;
+	paused: boolean;
+	rpcUrl: string;
+}
 export class DynamicFunctionSelector {
 	chainId: number;
 	apiKey: string;
 	eventsDirectory: string;
-	contractToPoll: PollContractData;
+	contractToPoll?: PollContractData;
 	db: admin.firestore.Firestore;
 	// Correctly type functionMap to store references to functions that, when called, return a Promise<void>
 	functionMap: Record<string, () => Promise<void>>;
@@ -36,10 +55,23 @@ export class DynamicFunctionSelector {
 			nattyStakingCurrent: this.nattyStakingCurrent.bind(this),
 			nattyStakingPrevious: this.nattyStakingPrevious.bind(this),
 			//Collectible Series Functions
-			//nftCollectibleSeriesFunction
-			//collectible Faucet Function
-			//burn Auction Function
-
+			collectibleSeriesFaucetFootball: this.collectibleSeriesFaucetFootball.bind(this),
+			collectibleSeriesFaucetBasketball: this.collectibleSeriesFaucetBasketball.bind(this),
+			collectibleSeriesNfts: this.collectibleSeriesNfts.bind(this),
+			collegeBurnAuctionFootball: this.collegeBurnAuctionFootball.bind(this),
+			collegeBurnAuctionBasketball: this.collegeBurnAuctionBasketball.bind(this),
+			//Draft Functions
+			draftControllerFootball: this.draftControllerFootball.bind(this),
+			draftControllerBasketball: this.draftControllerBasketball.bind(this),
+			draftPickNftsFootball: this.draftPickNftsFootball.bind(this),
+			draftPickNftsBasketball: this.draftPickNftsBasketball.bind(this),
+			//NIL Coin Functions
+			lpManager: this.lpManager.bind(this),
+			nilCoinFaucet: this.nilCoinFaucet.bind(this),
+			//Ring Series Functions
+			collegeRingSeriesNft: this.collegeRingSeriesNft.bind(this),
+			proRingSeriesNft: this.proRingSeriesNft.bind(this),
+			ringSeriesManager: this.ringSeriesManager.bind(this)
 		};
 	}
 
@@ -91,13 +123,74 @@ export class DynamicFunctionSelector {
 	//#endregion
 
 	//#region Collectible Series Functions
-	//nftCollectibleSeriesFunction
-	
-
-
+	//collectibleSeriesFaucetFootball
+	async collectibleSeriesFaucetFootball() {
+		await CollectibleFaucetPollerFactory.runPoller(this.eventsDirectory, this.chainId, true, this.db, this.apiKey);
+	}
+	//collectibleSeriesFaucetBasketball
+	async collectibleSeriesFaucetBasketball() {
+		await CollectibleFaucetPollerFactory.runPoller(this.eventsDirectory, this.chainId, false, this.db, this.apiKey);
+	}
+	//collectibleSeriesNfts
+	async collectibleSeriesNfts() {
+		await CollectibleNftsPollerFactory.runPoller(this.eventsDirectory, this.chainId, this.db, this.apiKey);
+	}
+	//collegeBurnAuctionFootball
+	async collegeBurnAuctionFootball() {
+		await CollectibleBurnAuctionPollerFactory.runPoller(this.eventsDirectory, this.chainId, true, this.db, this.apiKey);
+	}
+	//collegeBurnAuctionBasketball
+	async collegeBurnAuctionBasketball() {
+		await CollectibleBurnAuctionPollerFactory.runPoller(this.eventsDirectory, this.chainId, false, this.db, this.apiKey);
+	}
 	//#endregion
 
 
+	//#region Draft Functions Functions
+	//draftControllerFootball
+	async draftControllerFootball() {
+		await DraftControllerPollerFactory.runPoller(this.eventsDirectory, this.chainId, true, this.db, this.apiKey);
+	}
+	//draftControllerBasketball
+	async draftControllerBasketball() {
+		await DraftControllerPollerFactory.runPoller(this.eventsDirectory, this.chainId, false, this.db, this.apiKey);
+	}
+	//draftPickNftsFootball
+	async draftPickNftsFootball() {
+		await DraftPickNftsPollerFactory.runPoller(this.eventsDirectory, this.chainId, true, this.db, this.apiKey);
+	}
+	//draftPickNftsBasketball
+	async draftPickNftsBasketball() {
+		await DraftPickNftsPollerFactory.runPoller(this.eventsDirectory, this.chainId, false, this.db, this.apiKey);
+	}
+	//#endregion
+
+
+	//#region NIL Coin Functions
+	//lpManager
+	async lpManager() {
+		await LPManagerPollerFactory.runPoller(this.eventsDirectory, this.chainId, this.db, this.apiKey);
+	}
+	//nilCoinFaucet
+	async nilCoinFaucet() {
+		await NILCoinFaucetPollerFactory.runPoller(this.eventsDirectory, this.chainId, this.db, this.apiKey);
+	}
+	//#endregion
+
+	//#region Ring Series Functions
+	//collegeRingSeriesNft
+	async collegeRingSeriesNft() {
+		await CollegeRingSeriesNftsPollerFactory.runPoller(this.eventsDirectory, this.chainId, this.db, this.apiKey);
+	}
+	//proRingSeriesNft
+	async proRingSeriesNft() {
+		await ProRingSeriesNftsPollerFactory.runPoller(this.eventsDirectory, this.chainId, this.db, this.apiKey);
+	}
+	//ringSeriesManager
+	async ringSeriesManager() {
+		await RingSeriesManagerPollerFactory.runPoller(this.eventsDirectory, this.chainId, this.db, this.apiKey);
+	}
+	//#endregion
 
 }
 

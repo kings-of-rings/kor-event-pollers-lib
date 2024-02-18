@@ -1,9 +1,16 @@
 import * as admin from "firebase-admin";
 import { DynamicFunctionSelectorFactory } from "./DynamicFunctionSelector";
-
+type PollContractData = {
+	contractName: string;
+	contractAddress: string;
+	lastBlockPolled: number;
+	maxBlocksQuery: number;
+	paused: boolean;
+	rpcUrl: string;
+}
 
 export class PollerManager {
-	chainId: number;
+	chainId: number = 0;
 	pollDelay: number = 10000;
 	contractsPerPoll: number = 5;
 	eventsDirectory: string;
@@ -17,6 +24,7 @@ export class PollerManager {
 	async _loadSettings() {
 		const settingsDoc = await this.db.collection(this.eventsDirectory).doc("pollers").get();
 		const data: Record<string, any> | undefined = settingsDoc.data();
+		console.log("Settings Data: ", data);
 		if (data) {
 			this.chainId = data.chainId;
 			this.contractsPerPoll = data.contractsPerPoll;
@@ -52,6 +60,8 @@ export class PollerManager {
 
 	async _checkContracts() {
 		const contractsToPoll = await this._getContractsToPoll();
+		console.log("Contracts to Poll: ", contractsToPoll.length);
+		console.log("Contracts to Poll: ", contractsToPoll);
 		for (const contract of contractsToPoll) {
 			await this._pollContract(contract);
 		}
@@ -64,7 +74,7 @@ export class PollerManager {
 		const querySnapshot = await queryRef.get();
 		querySnapshot.forEach((doc) => {
 			const data = doc.data();
-			const address = data.address;
+			const address = data.contractAddress;
 			const lastBlockPolled = data.lastBlockPolled;
 			const contractData: PollContractData = {
 				contractAddress: address,
@@ -80,6 +90,7 @@ export class PollerManager {
 	}
 
 	async _pollContract(contract: PollContractData) {
+		console.log("Poll contract: ", contract);
 		await DynamicFunctionSelectorFactory.pollContract(contract, this.eventsDirectory, this.chainId, this.db);
 	}
 }
