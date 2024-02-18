@@ -5,11 +5,20 @@ import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
 
 const EVENTS_ABI = [
-	"event BurnBidIncreased(uint256 indexed _bidId, address indexed _bidder, uint256 indexed _tokenId, uint256 _increasedAmount, uint256 _totalBid, uint16 _year,bool _isFootball)",
-	"event BurnBidPlaced(uint256 indexed _bidId, address indexed _bidder, uint256 indexed _tokenId, uint256 _bidAmount, uint256 _bidCount, uint16 _year, bool _isFootball)",
+	"event AdminAddress(address _adminAddress)",
+	"event AthleteRegistryAddress(address _athleteRegistryAddress)",
+	"event AuctionType(bool _isFootball)",
 	"event BurnAuctionTimeSet(uint16 _year, bool _isFootball, uint256 _start, uint256 _end)",
-	"event RemoveBid(uint256 indexed _bidId, address indexed _bidder, uint256 indexed _tokenId, uint256 _bidAmount, uint256 _year, bool _isFootball)"
+	"event BurnBidIncreased(uint256 indexed _bidId, address indexed _bidder, uint256 indexed _tokenId, uint256 _increasedAmount, uint256 _totalBid, uint16 _year, bool _isFootball)",
+	"event BurnBidPlaced(uint256 indexed _bidId, address indexed _bidder, uint256 indexed _tokenId, uint256 _bidAmount, uint256 _bidCount, uint16 _year, bool _isFootball)",
+	"event DirectoryAddress(address _korDirectory)",
+	"event Initialized(uint64 version)",
+	"event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
+	"event RemoveBid(uint256 indexed _bidId, address indexed _bidder, uint256 indexed _tokenId, uint256 _bidAmount, uint256 _year, bool _isFootball)",
+	"event WinnerClaimed(uint256 indexed _tokenId, address indexed _user)",
+	"event YearSet(uint16 _year)"
 ];
+
 
 
 export class CollectibleBurnAuctionPoller {
