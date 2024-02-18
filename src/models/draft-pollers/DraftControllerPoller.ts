@@ -3,6 +3,7 @@ import { DraftTimeSet, DraftBidIncreased, DraftBidPlaced, DraftResultsFinalized,
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const DraftTimeSetAbi = ["event DraftTimeSet(uint256 _startTs, uint256 _endTs, uint256 _year, bool _isFootball)"];
 const DraftBidIncreasedAbi = ["event DraftBidIncreased(uint256 indexed _bidId, address indexed _bidder, uint256 indexed _duration, uint256 _amountAdded,uint256 _points,uint256 _year,bool _isFootball)"];
 const DraftBidPlacedAbi = ["event DraftBidPlaced(uint256 indexed _bidId,address indexed _bidder,uint256 indexed _duration,uint256 _amount,uint256 _points,uint256 _year,bool _isFootball)"];
@@ -34,9 +35,7 @@ export class DraftControllerPoller {
 	async pollBlocks(apiKey: string) {
 		if (!this.paused) {
 			const provider = await this._getProvider();
-			if (!provider) {
-				throw new Error("No provider found");
-			}
+			throwErrorIfUndefined(provider, "No provider found");
 			let currentBlock = await provider.getBlockNumber() - 1;
 			const difference = currentBlock - this.lastBlockPolled;
 			if (difference > this.maxBlocksQuery) {
@@ -68,9 +67,8 @@ export class DraftControllerPoller {
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
 			this.paused = data?.paused || false;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -139,9 +137,7 @@ export class DraftControllerPoller {
 		console.log('Save Draft Time Set Event');
 		const event = new DraftTimeSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftTimeSet", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for draftTimeSetEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for draftTimeSetEvent");
 		return await event.saveData(endpoint, apiKey, provider);
 
 	}
@@ -149,9 +145,7 @@ export class DraftControllerPoller {
 		console.log('Save Draft Bid Increased Event');
 		const draftBidIncreasedEvent = new DraftBidIncreased(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftBidIncreased", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for draftBidIncreasedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for draftBidIncreasedEvent");
 		return await draftBidIncreasedEvent.saveData(endpoint, apiKey, provider);
 
 	}
@@ -159,9 +153,7 @@ export class DraftControllerPoller {
 		console.log('Save Draft Bid Placed Event');
 		const draftBidPlacedEvent = new DraftBidPlaced(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftBidPlaced", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for draftBidPlacedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for draftBidPlacedEvent");
 		return await draftBidPlacedEvent.saveData(endpoint, apiKey, provider);
 
 	}
@@ -169,38 +161,27 @@ export class DraftControllerPoller {
 		console.log('Save Draft Results Finalized Event');
 		const resultsFinalEvent = new DraftResultsFinalized(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftResultsFinalized", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveResultsFinalEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveResultsFinalEvent");
 		return await resultsFinalEvent.saveData(endpoint, apiKey);
 
 	}
 	async _saveClaimingRequirementsSetEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
-		console.log('Save Claiming Requirements Set Event');
 		const claimingRequirementsSetEvent = new ClaimingRequirementsSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "claimingRequirementsSet", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveClaimingRequirementsSetEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveClaimingRequirementsSetEvent");
 		return await claimingRequirementsSetEvent.saveData(endpoint, apiKey);
 
 	}
 	async _saveDraftPickClaimedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
-		console.log('Save Draft Pick Claimed Event');
 		const draftPickClaimedEvent = new DraftPickClaimed(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftPickClaimed", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveDraftPickClaimedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveDraftPickClaimedEvent");
 		return await draftPickClaimedEvent.saveData(endpoint, apiKey);
 	}
 	async _saveDraftStakeClaimedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
-		console.log('Save Draft Stake Claimed Event');
 		const draftStakeClaimedEvent = new DraftStakeClaimed(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftStakeClaimed", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveDraftStakeClaimedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveDraftStakeClaimedEvent");
 		return await draftStakeClaimedEvent.saveData(endpoint, apiKey);
 	}
 }

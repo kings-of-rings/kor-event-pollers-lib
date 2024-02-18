@@ -3,6 +3,7 @@ import { DraftTimeSet, DraftBidIncreased, DraftBidPlaced, BurnBidPlaced, BurnBid
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 
 const EVENTS_ABI = [
 	"event BurnAuctionTimeSet(uint16 _year, bool _isFootball, uint256 _start, uint256 _end)",
@@ -34,10 +35,7 @@ export class CollectibleBurnAuctionPoller {
 	async pollBlocks(apiKey: string) {
 		if (!this.paused) {
 			const provider = await this._getProvider();
-			if (!provider) {
-				throw new Error("No provider found");
-			}
-
+			throwErrorIfUndefined(provider, "No provider found");
 			this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 			let currentBlock = await provider.getBlockNumber() - 1;
 			const difference = currentBlock - this.lastBlockPolled;
@@ -67,9 +65,7 @@ export class CollectibleBurnAuctionPoller {
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.paused = data?.paused || false;
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -78,9 +74,7 @@ export class CollectibleBurnAuctionPoller {
 	}
 
 	async _pollBurnBidIncreased(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		}
+		throwErrorIfUndefined(this.contract, "No contract found burn bid increased event");
 		const contractFilter = this.contract.filters.BurnBidIncreased();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -88,9 +82,7 @@ export class CollectibleBurnAuctionPoller {
 		}
 	}
 	async _pollBurnBidPlaced(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		}
+		throwErrorIfUndefined(this.contract, "No contract found burn bid placed event");
 		const contractFilter = this.contract.filters.BurnBidPlaced();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -98,9 +90,7 @@ export class CollectibleBurnAuctionPoller {
 		}
 	}
 	async _pollBurnAuctionTimeSet(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		}
+		throwErrorIfUndefined(this.contract, "No contract found burn auction time set event");
 		const contractFilter = this.contract.filters.BurnAuctionTimeSet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -108,9 +98,7 @@ export class CollectibleBurnAuctionPoller {
 		}
 	}
 	async _pollRemoveBid(currentBlock: number, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		}
+		throwErrorIfUndefined(this.contract, "No contract found remove bid event");
 		const contractFilter = this.contract.filters.RemoveBid();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -121,27 +109,21 @@ export class CollectibleBurnAuctionPoller {
 	async _saveBurnBidIncreasedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new BurnBidIncreased(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnBidIncreased", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for save burn bid increased event");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for save burn bid increased event")
 		return await event.saveData(endpoint, apiKey, provider);
 
 	}
 	async _saveBurnBidPlacedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new BurnBidPlaced(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnBidPlaced", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for save burn bid placed event");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for save burn bid placed event")
 		return await event.saveData(endpoint, apiKey, provider);
 
 	}
 	async _saveBurnAuctionTimeSetEvent(log: ethers.Event, provider: any, apiKey: string): Promise<unknown> {
 		const event = new BurnAuctionTimeSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "burnAuctionTimeSet", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for save burn auction time set event");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for save burn auction time set event")
 		return await event.saveData(endpoint, apiKey);
 	}
 

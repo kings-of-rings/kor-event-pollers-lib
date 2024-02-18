@@ -3,6 +3,7 @@ import { TokenUriSet } from "@kings-of-rings/kor-contract-event-data-models/lib"
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const EVENTS_ABI = [
 	"event TokenUriSet(uint256 _tokenId, string _uri)"
 ];
@@ -25,25 +26,24 @@ export class CollegeRingSeriesNftsPoller {
 
 	async pollBlocks(apiKey: string) {
 		if (!this.paused) {
-		const provider = await this._getProvider();
-		if (!provider) {
-			throw new Error("No provider found");
-		}
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
-		let currentBlock = await provider.getBlockNumber() - 1;
-		const difference = currentBlock - this.lastBlockPolled;
-		if (difference > this.maxBlocksQuery) {
-			currentBlock = this.lastBlockPolled + this.maxBlocksQuery;
-		}
-		await this._pollTokenUriSet(currentBlock, provider, apiKey);
+			const provider = await this._getProvider();
+			throwErrorIfUndefined(provider, "No provider found");
+			this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
+			let currentBlock = await provider.getBlockNumber() - 1;
+			const difference = currentBlock - this.lastBlockPolled;
+			if (difference > this.maxBlocksQuery) {
+				currentBlock = this.lastBlockPolled + this.maxBlocksQuery;
+			}
+			await this._pollTokenUriSet(currentBlock, provider, apiKey);
 
-		this.lastBlockPolled = currentBlock;	  // update contract last block polled
-		const contractDoc = this.db.collection(`${this.eventsDirectory}/pollers/contracts`).doc(this.docName);
-		await contractDoc.update({
-			lastBlockPolled: currentBlock,
-		});
-		return;
-	}}
+			this.lastBlockPolled = currentBlock;	  // update contract last block polled
+			const contractDoc = this.db.collection(`${this.eventsDirectory}/pollers/contracts`).doc(this.docName);
+			await contractDoc.update({
+				lastBlockPolled: currentBlock,
+			});
+			return;
+		}
+	}
 
 	async _getProvider(): Promise<ethers.providers.JsonRpcProvider | undefined> {
 		try {
@@ -54,9 +54,8 @@ export class CollegeRingSeriesNftsPoller {
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
 			this.paused = data?.paused || false;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -76,9 +75,7 @@ export class CollegeRingSeriesNftsPoller {
 	async _saveTokenUriSetEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new TokenUriSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "tokenUriSet", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for tokenUriSet collegeRingSeriesNft poller");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for tokenUriSet");
 		return await event.saveData(endpoint, apiKey, provider);
 
 	}

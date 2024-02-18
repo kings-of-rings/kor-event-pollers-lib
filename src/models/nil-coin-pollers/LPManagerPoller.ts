@@ -3,6 +3,7 @@ import { NilAddLiquidityProcedure } from "@kings-of-rings/kor-contract-event-dat
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const EVENTS_ABI = [
 	"event NilAddLiquidityProcedure(uint256 _id, uint256 _stableLpAmount, uint256 _nilAmountBurned)"
 ];
@@ -26,9 +27,7 @@ export class LPManagerPoller {
 	async pollBlocks(apiKey: string) {
 		if (!this.paused) {
 			const provider = await this._getProvider();
-			if (!provider) {
-				throw new Error("No provider found");
-			}
+			throwErrorIfUndefined(provider, "No provider found");
 			let currentBlock = await provider.getBlockNumber() - 1;
 			const difference = currentBlock - this.lastBlockPolled;
 			if (difference > this.maxBlocksQuery) {
@@ -54,9 +53,8 @@ export class LPManagerPoller {
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
 			this.paused = data?.paused || false;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -76,9 +74,7 @@ export class LPManagerPoller {
 	async _saveNilAddLiquidityProcedureEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new NilAddLiquidityProcedure(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "nilLiquidityProcedure", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for nilLiquidityProcedure");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found");
 		return await event.saveData(endpoint, apiKey, provider);
 
 	}

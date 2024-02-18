@@ -16,6 +16,7 @@ import { CollegeRingSeriesNftsPollerFactory } from "../ring-series/CollegeRingSe
 import { LPManagerPollerFactory } from "../nil-coin-pollers/LPManagerPoller";
 import { NILCoinFaucetPollerFactory } from "../nil-coin-pollers/NILCoinFaucetPoller";
 import { DraftControllerPollerFactory } from "../draft-pollers/DraftControllerPoller";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 
 type PollContractData = {
 	contractName: string;
@@ -38,9 +39,7 @@ export class DynamicFunctionSelector {
 		this.eventsDirectory = eventsDirectory;
 		this.db = db;
 		this.chainId = chainId;
-		if (!process.env.LAMBDA_API_KEY) {
-			throw new Error("API Key not found");
-		}
+		throwErrorIfUndefined(process.env.LAMBDA_API_KEY, "API Key not found");
 		this.apiKey = process.env.LAMBDA_API_KEY;
 		this.functionMap = {
 			//Registry Functions

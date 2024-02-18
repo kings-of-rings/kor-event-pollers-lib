@@ -2,6 +2,7 @@ import { TeamStakeAdded, TeamStakeClaimed, TeamStakingTimeSet } from "@kings-of-
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const EVENTS_ABI = [
 	"event StakeAdded(uint256 indexed _stakeId,address indexed _staker,uint256 indexed _collegeId,uint256 _amount,uint16 _year,bool _isNatty,bool _increase)",
 	"event StakeClaimed(uint256 indexed _stakeId,address indexed _staker,uint256 indexed _collegeId,uint256 _amount,uint16 _year,bool _isNatty)",
@@ -29,9 +30,7 @@ export class TeamStakePollers {
 
 	async pollBlocks(apiKey: string) {
 		const provider = await this._getProvider();
-		if (!provider) {
-			throw new Error("No provider found");
-		}
+		throwErrorIfUndefined(provider, "No provider found");
 		let currentBlock = await provider.getBlockNumber() - 1;
 		const difference = currentBlock - this.lastBlockPolled;
 		if (difference > this.maxBlocksQuery) {
@@ -57,9 +56,8 @@ export class TeamStakePollers {
 			this.lastBlockPolled = data?.lastBlockPolled;
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -96,18 +94,14 @@ export class TeamStakePollers {
 	async _saveStakeAddedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const draftBidIncreasedEvent = new TeamStakeAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "teamStakeAdded", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for SaveStakeAddedEvent");
-		}
+	throwErrorIfUndefined(endpoint, "No endpoint found for SaveStakeAddedEvent");
 		return await draftBidIncreasedEvent.saveData(endpoint, apiKey, provider);
 
 	}
 	async _saveStakeClaimedEvent(log: ethers.Event, provider: any, apiKey: string): Promise<unknown> {
 		const draftBidPlacedEvent = new TeamStakeClaimed(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "teamStakeClaimed", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for SaveStakeClaimedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for SaveStakeClaimedEvent");
 		return await draftBidPlacedEvent.saveData(endpoint, apiKey);
 
 	}
@@ -117,9 +111,7 @@ export class TeamStakePollers {
 		console.log('resultsFinalEvent ', resultsFinalEvent)
 		const endpoint = await getEndpoint(this.eventsDirectory, "teamStakeTimeSet", this.db);
 		console.log('endpoint', endpoint)
-		if (!endpoint) {
-			throw new Error("No endpoint found for StakingTimeSetEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for SaveStakingTimeSetEvent");
 		return await resultsFinalEvent.saveData(endpoint, apiKey);
 	}
 

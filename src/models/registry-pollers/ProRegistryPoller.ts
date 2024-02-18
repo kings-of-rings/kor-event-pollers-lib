@@ -2,6 +2,7 @@ import { ProTeamAdded, ProTeamChanged } from "@kings-of-rings/kor-contract-event
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const EventsAbi = [
 	"event TeamAdded(uint256 indexed _teamId, bool indexed _isFootball, string _name, string _mascot,  string _conference)",
 	"event TeamChanged(uint256 indexed _teamId, bool indexed _isFootball, string _name, string _mascot, string _conference)"
@@ -26,9 +27,7 @@ export class ProRegistryPoller {
 
 	async pollBlocks(apiKey: string) {
 		const provider = await this._getProvider();
-		if (!provider) {
-			throw new Error("No provider found");
-		}
+		throwErrorIfUndefined(provider, "No provider found");
 		this.contract = new ethers.Contract(this.contractAddress, EventsAbi, provider);
 		let currentBlock = await provider.getBlockNumber() - 1;
 		const difference = currentBlock - this.lastBlockPolled;
@@ -54,9 +53,7 @@ export class ProRegistryPoller {
 			this.lastBlockPolled = data?.lastBlockPolled;
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -81,18 +78,14 @@ export class ProRegistryPoller {
 	async _saveTeamAddedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new ProTeamAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamAdded", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveTeamAddedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveTeamAddedEvent");
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 
 	async _saveTeamChangedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new ProTeamChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "proTeamChanged", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveTeamChangedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveTeamChangedEvent");
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 }

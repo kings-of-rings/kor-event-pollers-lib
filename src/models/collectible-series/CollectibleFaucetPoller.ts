@@ -3,6 +3,7 @@ import { AccessCreditsAddressSet, AthletePriceSet, CollectibleFaucetTimeSet, Fau
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const EVENTS_ABI = [
 	"event AccessCreditsAddress(uint16 _year, bool _isFootball, address _accessCreditsAddress)",
 	"event AthletePriceSet(uint256 _athleteId, uint16 _year, uint256 _price)",
@@ -33,9 +34,7 @@ export class CollectibleFaucetPoller {
 	async pollBlocks(apiKey: string) {
 		if (!this.paused) {
 			const provider = await this._getProvider();
-			if (!provider) {
-				throw new Error("No provider found");
-			}
+			throwErrorIfUndefined(provider, "No provider found");
 			this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 			let currentBlock = await provider.getBlockNumber() - 1;
 			const difference = currentBlock - this.lastBlockPolled;
@@ -66,9 +65,7 @@ export class CollectibleFaucetPoller {
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
 			this.paused = data?.paused || false;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -77,10 +74,7 @@ export class CollectibleFaucetPoller {
 	}
 
 	async _pollAccessCreditsAddress(currentBlock: number, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		}
-
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.AccessCreditsAddress();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -88,9 +82,7 @@ export class CollectibleFaucetPoller {
 		}
 	}
 	async _pollAthletePriceSet(currentBlock: number, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		}
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.AthletePriceSet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -98,9 +90,7 @@ export class CollectibleFaucetPoller {
 		}
 	}
 	async _pollCollectibleFaucetTimeSet(currentBlock: number, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		}
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.CollectibleFaucetTimeSet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -108,9 +98,7 @@ export class CollectibleFaucetPoller {
 		}
 	}
 	async _pollLevelAdded(currentBlock: number, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		}
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.LevelAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -118,9 +106,7 @@ export class CollectibleFaucetPoller {
 		}
 	}
 	async _pollCollectibleFaucetSale(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		}
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.CollectibleFaucetSale();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -131,45 +117,35 @@ export class CollectibleFaucetPoller {
 	async _saveAccessCreditsAddressEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new AccessCreditsAddressSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "accessCreditsAddress", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for accessCreditsAddressEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for accessCreditsAddressEvent");
 		return await event.saveData(endpoint, apiKey);
 
 	}
 	async _saveAthletePriceSetEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new AthletePriceSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athletePriceSet", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for athletePriceSetEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for athletePriceSetEvent");
 		return await event.saveData(endpoint, apiKey);
 
 	}
 	async _saveCollectibleFaucetTimeSetEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new CollectibleFaucetTimeSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleFaucetTimeSet", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for collectibleFaucetTimeSetEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for collectibleFaucetTimeSetEvent");
 		return await event.saveData(endpoint, apiKey);
 
 	}
 	async _saveLevelAddedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new FaucetLevelAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "faucetLevelAdded", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for faucetLevelAddedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for levelAddedEvent");
 		return await event.saveData(endpoint, apiKey);
 
 	}
 	async _saveCollectibleFaucetSaleEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new CollectibleFaucetSale(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "faucetSale", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for collectibleFaucetSaleEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for collectibleFaucetSaleEvent");
 		return await event.saveData(endpoint, apiKey, provider);
 
 	}

@@ -3,6 +3,7 @@ import { AthletePaymentReceived, AthletePaymentDisbursed } from "@kings-of-rings
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 
 const EVENTS_ABI = [
 	"event PaymentReceived(uint256 indexed _paymentId,uint256 indexed _athleteId,address indexed _paymentToken,uint256 _amount,uint256 _balance)",
@@ -28,9 +29,7 @@ export class AthletePaymentManagerPoller {
 
 	async pollBlocks(apiKey: string) {
 		const provider = await this._getProvider();
-		if (!provider) {
-			throw new Error("No provider found");
-		}
+		throwErrorIfUndefined(provider, "No provider found");
 		let currentBlock = await provider.getBlockNumber() - 1;
 		const difference = currentBlock - this.lastBlockPolled;
 		if (difference > this.maxBlocksQuery) {
@@ -57,9 +56,8 @@ export class AthletePaymentManagerPoller {
 			this.lastBlockPolled = data?.lastBlockPolled;
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -68,7 +66,7 @@ export class AthletePaymentManagerPoller {
 	}
 
 	async _pollPaymentReceived(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.PaymentReceived();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -76,7 +74,7 @@ export class AthletePaymentManagerPoller {
 		}
 	}
 	async _pollPaymentDisbursed(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.PaymentDisbursed();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -86,18 +84,14 @@ export class AthletePaymentManagerPoller {
 	async _savePaymentReceivedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new AthletePaymentReceived(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athletePaymentReceived", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveTeamAddedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for savePaymentReceivedEvent");
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 
 	async _savePaymentDisbursedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new AthletePaymentDisbursed(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athletePaymentDisbursed", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveTeamChangedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveTeamChangedEvent");
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 }

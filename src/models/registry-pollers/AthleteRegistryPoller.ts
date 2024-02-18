@@ -3,6 +3,7 @@ import { AthleteAdded, AthleteNameChanged, AthleteCollegeChanged, AthleteProTeam
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const EVENTS_ABI = [
 	"event ActiveYearAdded(uint256 indexed _athleteId, uint16 indexed _year)",
 	"event AthleteAdded(uint256 indexed _athleteId, bool indexed _isFootball, string _displayName, string _lastName, string _middleName, string _firstName)",
@@ -31,9 +32,7 @@ export class AthleteRegistryPoller {
 
 	async pollBlocks(apiKey: string) {
 		this.ethersProvider = await this._getProvider();
-		if (!this.ethersProvider) {
-			throw new Error("No provider found");
-		}
+		throwErrorIfUndefined(this.ethersProvider, "No provider found");
 		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, this.ethersProvider);
 		let currentBlock = await this.ethersProvider.getBlockNumber() - 1;
 		const difference = currentBlock - this.lastBlockPolled;
@@ -63,9 +62,7 @@ export class AthleteRegistryPoller {
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
 			this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI);
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -74,9 +71,7 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollActiveYearAdded(currentBlock: number, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		};
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.ActiveYearAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -85,9 +80,7 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteAdded(currentBlock: number, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		};
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.AthleteAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -96,9 +89,7 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteNameChanged(currentBlock: number, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		};
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.AthleteNameChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -107,9 +98,7 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteCollegeChanged(currentBlock: number, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		};
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.AthleteCollegeChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -118,9 +107,7 @@ export class AthleteRegistryPoller {
 	}
 
 	async _pollAthleteProTeamChanged(currentBlock: number, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		};
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.AthleteProTeamChanged();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -131,45 +118,35 @@ export class AthleteRegistryPoller {
 	async _saveAthleteAddedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new AthleteAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteAdded", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveAthleteAddedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveAthleteAddedEvent");
 		return await event.saveData(endpoint, apiKey, this.ethersProvider);
 	}
 
 	async _saveAthleteNameChangedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new AthleteNameChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteNameChanged", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveAthleteNameChangedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveAthleteNameChangedEvent");
 		return await event.saveData(endpoint, apiKey, this.ethersProvider);
 	}
 
 	async _saveAthleteCollegeChangedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new AthleteCollegeChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteCollegeChanged", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveAthleteCollegeChangedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveAthleteCollegeChangedEvent");
 		return await event.saveData(endpoint, apiKey, this.ethersProvider);
 	}
 
 	async _saveAthleteProTeamChangedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new AthleteProTeamChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteProTeamChanged", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveAthleteProTeamChangedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveAthleteProTeamChangedEvent");
 		return await event.saveData(endpoint, apiKey, this.ethersProvider);
 	}
 
 	async _saveActiveYearAddedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new AthleteActiveYearAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteActiveYearAdded", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveActiveYearAddedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveActiveYearAddedEvent");
 		return await event.saveData(endpoint, apiKey, this.ethersProvider);
 	}
 }

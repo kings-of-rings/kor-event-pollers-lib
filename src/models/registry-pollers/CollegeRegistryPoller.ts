@@ -3,6 +3,7 @@ import { CollegeAdded, CollegeChanged, TierChanged } from "@kings-of-rings/kor-c
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 
 const EVENTS_ABI = [
 	"event CollegeAdded(uint256 indexed _collegeId,string _name,string _conference,string _mascot, uint16 _tier, uint16 _royalty)",
@@ -29,9 +30,7 @@ export class CollegeRegistryPoller {
 
 	async pollBlocks(apiKey: string) {
 		const provider = await this._getProvider();
-		if (!provider) {
-			throw new Error("No provider found");
-		}
+		throwErrorIfUndefined(provider, "No provider found");
 		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		let currentBlock = await provider.getBlockNumber() - 1;
 		const difference = currentBlock - this.lastBlockPolled;
@@ -58,9 +57,8 @@ export class CollegeRegistryPoller {
 			this.lastBlockPolled = data?.lastBlockPolled;
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -96,27 +94,21 @@ export class CollegeRegistryPoller {
 		console.log('Saving CollegeAdded Event');
 		const event = new CollegeAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeAdded", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveCollegeAddedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for collegeAdded");
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 
 	async _saveCollegeChangedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new CollegeChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeChanged", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveCollegeChangedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveCollegeChangedEvent");
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 
 	async _saveTierChangedEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new TierChanged(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collegeTierChanged", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveTierChangedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveTierChangedEvent");
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 }

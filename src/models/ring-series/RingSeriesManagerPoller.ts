@@ -3,6 +3,7 @@ import { AthleteRingSeriesQtySet, AthleteRingSeriesEligibilitySet, RingSeriesYea
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 
 const EVENTS_ABI = [
 	"event AthleteRingSeriesQtySet(uint256 indexed _athleteId, uint256 _maxQty, uint256 _athleteQty)",
@@ -30,9 +31,7 @@ export class RingSeriesManagerPoller {
 	async pollBlocks(apiKey: string) {
 		if (!this.paused) {
 			const provider = await this._getProvider();
-			if (!provider) {
-				throw new Error("No provider found");
-			}
+			throwErrorIfUndefined(provider, "No provider found");
 
 			this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 			let currentBlock = await provider.getBlockNumber() - 1;
@@ -62,9 +61,7 @@ export class RingSeriesManagerPoller {
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.paused = data?.paused || false;
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -100,9 +97,7 @@ export class RingSeriesManagerPoller {
 	async _saveAthleteRingSeriesQtySetEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new AthleteRingSeriesQtySet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteRingSeriesQtySet", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for save athlete ring series qty set event");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for save athlete ring series qty set event");
 		return await event.saveData(endpoint, apiKey);
 
 	}
@@ -110,18 +105,14 @@ export class RingSeriesManagerPoller {
 	async _saveAthleteRingSeriesEligibilitySetEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new AthleteRingSeriesEligibilitySet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "athleteRingSeriesEligibilitySet", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for save athlete ring series eligibility set event");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for save athlete ring series eligibility set event");
 		return await event.saveData(endpoint, apiKey);
 
 	}
 	async _saveRingSeriesYearAddedEvent(log: ethers.Event, provider: any, apiKey: string): Promise<unknown> {
 		const event = new RingSeriesYearAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "ringSeriesYearAdded", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for save ring series year added event");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for save ring series year added event");
 		return await event.saveData(endpoint, apiKey);
 	}
 }

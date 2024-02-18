@@ -3,6 +3,7 @@ import { FaucetTargetPrice, TokenFaucetSale } from "@kings-of-rings/kor-contract
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const EVENTS_ABI = [
 	"event FaucetTargetPrice(uint256 _price)",
 	"event TokenFaucetSale(uint256 indexed _saleId, address indexed _buyer, uint256 _qty, uint256 _totalCost)"
@@ -27,9 +28,7 @@ export class NILCoinFaucetPoller {
 	async pollBlocks(apiKey: string) {
 		if (!this.paused) {
 			const provider = await this._getProvider();
-			if (!provider) {
-				throw new Error("No provider found");
-			}
+			throwErrorIfUndefined(provider, "No provider found");
 			let currentBlock = await provider.getBlockNumber() - 1;
 			const difference = currentBlock - this.lastBlockPolled;
 			if (difference > this.maxBlocksQuery) {
@@ -56,9 +55,8 @@ export class NILCoinFaucetPoller {
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
 			this.paused = data?.paused || false;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -86,17 +84,13 @@ export class NILCoinFaucetPoller {
 	async _saveFaucetTargetPriceEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new FaucetTargetPrice(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "nilFaucetTargetPrice", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for save Faucet Target Price Event");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for save faucet target price event");
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 	async _saveTokenFaucetSaleEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
 		const event = new TokenFaucetSale(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "tokenFaucetSale", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for save token faucet sale event");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for save token faucet sale event");
 		return await event.saveData(endpoint, apiKey, provider);
 	}
 }

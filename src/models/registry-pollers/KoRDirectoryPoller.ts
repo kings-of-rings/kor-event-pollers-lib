@@ -3,6 +3,7 @@ import { DraftControllerAdded, RingSeriesTokenContractAdded, CollectibleSeriesFa
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const EVENTS_ABI = [
 	"event DraftControllerAdded(uint16 indexed _year, address indexed _address, bool indexed _isFootball)",
 	"event RingSeriesTokenContractAdded(uint16 indexed _year, address indexed _address)",
@@ -28,9 +29,7 @@ export class KoRDirectoryPoller {
 
 	async pollBlocks(apiKey: string) {
 		const provider = await this._getProvider();
-		if (!provider) {
-			throw new Error("No provider found");
-		}
+		throwErrorIfUndefined(provider, "No provider found");
 		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 		let currentBlock = await provider.getBlockNumber() - 1;
 		const difference = currentBlock - this.lastBlockPolled;
@@ -58,9 +57,7 @@ export class KoRDirectoryPoller {
 			this.lastBlockPolled = data?.lastBlockPolled;
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -69,6 +66,7 @@ export class KoRDirectoryPoller {
 	}
 
 	async _pollDraftControllerAddedAdded(currentBlock: number, apiKey: string) {
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.DraftControllerAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -76,6 +74,7 @@ export class KoRDirectoryPoller {
 		}
 	}
 	async _pollRingSeriesTokenContractAddedChanged(currentBlock: number, apiKey: string) {
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.RingSeriesTokenContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -83,9 +82,7 @@ export class KoRDirectoryPoller {
 		}
 	}
 	async _pollCollectibleSeriesFaucetContractAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		};
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.CollectibleSeriesFaucetContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -93,9 +90,7 @@ export class KoRDirectoryPoller {
 		}
 	}
 	async _pollCollectibleSeriesTokenContractAdded(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		if (!this.contract) {
-			throw new Error("No contract found");
-		};
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.CollectibleSeriesTokenContractAdded();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
@@ -105,34 +100,26 @@ export class KoRDirectoryPoller {
 	async _saveDraftControllerAddedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new DraftControllerAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftControllerAdded", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveDraftControllerAddedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveDraftControllerAddedEvent");
 		return await event.saveData(endpoint, apiKey);
 	}
 
 	async _saveRingSeriesTokenContractAddedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new RingSeriesTokenContractAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "ringSeriesTokenContractAdded", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveRingSeriesTokenContractAddedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveRingSeriesTokenContractAddedEvent");
 		return await event.saveData(endpoint, apiKey);
 	}
 	async _saveCollectibleSeriesFaucetContractAddedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new CollectibleSeriesFaucetContractAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleSeriesFaucetContractAdded", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveCollectibleSeriesFaucetContractAddedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveCollectibleSeriesFaucetContractAddedEvent");
 		return await event.saveData(endpoint, apiKey);
 	}
 	async _saveCollectibleSeriesTokenContractAddedEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new CollectibleSeriesTokenContractAdded(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "collectibleSeriesTokenContractAdded", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for saveCollectibleSeriesTokenContractAddedEvent");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for saveCollectibleSeriesTokenContractAddedEvent");
 		return await event.saveData(endpoint, apiKey);
 	}
 }

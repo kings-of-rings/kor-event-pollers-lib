@@ -3,6 +3,7 @@ import { TokenDataSet } from "@kings-of-rings/kor-contract-event-data-models/lib
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
 import { getEndpoint } from "../../utils/getEndpoint";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const EVENTS_ABI = [
 	"event TokenDataSet(uint256  _tokenId,uint256  _round,uint256  _slot,uint256 _startTs,string _uri,uint16 _year,bool _isFootball)"
 ];
@@ -28,9 +29,7 @@ export class DraftPickNftsPoller {
 	async pollBlocks(apiKey: string) {
 		if (!this.paused) {
 			const provider = await this._getProvider();
-			if (!provider) {
-				throw new Error("No provider found");
-			}
+			throwErrorIfUndefined(provider, "No provider found");
 			this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
 			let currentBlock = await provider.getBlockNumber() - 1;
 			const difference = currentBlock - this.lastBlockPolled;
@@ -57,9 +56,7 @@ export class DraftPickNftsPoller {
 			this.contractAddress = data?.contractAddress.toLowerCase();
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
 			this.paused = data?.paused || false;
-			if (!rpcUrl) {
-				throw new Error("No rpc url found");
-			}
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
@@ -68,20 +65,18 @@ export class DraftPickNftsPoller {
 	}
 
 	async _pollTokenDataSet(currentBlock: number, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string) {
-		this.contract = new ethers.Contract(this.contractAddress, EVENTS_ABI, provider);
+		throwErrorIfUndefined(this.contract, "No contract found");
 		const contractFilter = this.contract.filters.TokenDataSet();
 		const logs = await this.contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
 		for (const log of logs) {
-			await this._saveTokenDataSetEvent(log, provider, apiKey);
+			await this._saveTokenDataSetEvent(log, apiKey);
 		}
 	}
 
-	async _saveTokenDataSetEvent(log: ethers.Event, provider: ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider, apiKey: string): Promise<unknown> {
+	async _saveTokenDataSetEvent(log: ethers.Event, apiKey: string): Promise<unknown> {
 		const event = new TokenDataSet(log, this.chainId);
 		const endpoint = await getEndpoint(this.eventsDirectory, "draftPickTokenDataSet", this.db);
-		if (!endpoint) {
-			throw new Error("No endpoint found for draft pick token data set");
-		}
+		throwErrorIfUndefined(endpoint, "No endpoint found for draftPickTokenDataSet");
 		return await event.saveData(endpoint, apiKey);
 
 	}

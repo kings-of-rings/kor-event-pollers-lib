@@ -1,6 +1,7 @@
 import { Erc20Transfer } from "@kings-of-rings/kor-contract-event-data-models";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
+import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const TransferAbi = ["event Transfer(address from, address to, uint256 value)"];
 
 export class ERC20TransferPoller {
@@ -21,9 +22,7 @@ export class ERC20TransferPoller {
 
 	async pollBlocks(db: admin.firestore.Firestore, apiKey: string) {
 		const provider = await this._getProvider(db);
-		if (!provider) {
-			throw new Error("No provider found");
-		}
+		throwErrorIfUndefined(provider, "No provider found");
 		await this._pollBlocks(provider, db, apiKey);
 	}
 
@@ -34,9 +33,7 @@ export class ERC20TransferPoller {
 			const rpc = data?.rpc;
 			this.transferEndpoint = data?.transferEndpoint;
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
-			if (!rpc) {
-				throw new Error("No rpc url found");
-			}
+			throwErrorIfUndefined(rpc, "No rpc url found");
 			return new ethers.providers.JsonRpcProvider(rpc);
 		} catch (error) {
 			console.log('Error ', error);
