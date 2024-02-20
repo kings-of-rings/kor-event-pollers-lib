@@ -17,4 +17,5 @@ export * from './models/registry-pollers/ProRegistryPoller';
 export * from './models/ring-series/CollegeRingSeriesNftsPoller';
 export * from './models/ring-series/ProRingSeriesNftsPoller';
 export * from './models/ring-series/RingSeriesManagerPoller';
+export * from './models/sgb-pollers/SongbirdPollers';
 export * from './models/staking-pollers/TeamStakePollers';

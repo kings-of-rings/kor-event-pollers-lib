@@ -1,6 +1,6 @@
 {
   "name": "@kings-of-rings/kor-event-pollers-lib",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "description": "",
   "main": "lib/index.js",
   "publishConfig": {
@@ -18,7 +18,7 @@
   "license": "ISC",
   "dependencies": {
     "@kings-of-rings/kor-abis-lib": "^0.0.4",
-    "@kings-of-rings/kor-contract-event-data-models": "^0.0.71",
+    "@kings-of-rings/kor-contract-event-data-models": "^0.0.73",
     "dotenv": "^16.3.2",
     "ethers": "^5.7.0",
     "firebase-admin": "^12.0.0"
