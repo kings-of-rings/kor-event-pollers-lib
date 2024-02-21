@@ -9,6 +9,7 @@ export * from './models/nil-coin-pollers/LPManagerPoller';
 export * from './models/nil-coin-pollers/NILCoinFaucetPoller';
 export * from './models/poll-managers/ERC1155PollManager';
 export * from './models/poll-managers/PollerManager';
+export * from './models/poll-managers/ERC20PollManager';
 export * from './models/registry-pollers/AthletePaymentManagerPoller';
 export * from './models/registry-pollers/AthleteRegistryPoller';
 export * from './models/registry-pollers/CollegeRegistryPoller';
