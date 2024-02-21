@@ -7,12 +7,12 @@ type ContractData = {
 
 export class ERC20PollManager {
   chainId: number;
-  directoryDoc: string;
+  eventsDirectory: string;
   pollingPath: string;
-  constructor(chainId: number, isTestNet: boolean) {
+	constructor(eventsDirectory:string, chainId: number) {
     this.chainId = chainId;
-    this.directoryDoc = isTestNet ? "erc20_testnet" : "erc20_mainnet";
-    this.pollingPath = isTestNet ? "polling/erc20/transfers_testnet" : "polling/erc20/transfers_mainnet";
+	this.eventsDirectory = eventsDirectory;
+	this.pollingPath = `${eventsDirectory}/erc20/transfers`;
   };
 
   async checkContracts(db: admin.firestore.Firestore) {
@@ -24,7 +24,7 @@ export class ERC20PollManager {
 
   async _getContractsToPoll(db: admin.firestore.Firestore): Promise<ContractData[]> {
     const listToReturn: ContractData[] = [];
-    const collectionRef = db.collection(`directory/${this.directoryDoc}/contracts`);
+    const collectionRef = db.collection(`${this.eventsDirectory}/erc20/contracts`);
     const queryRef = collectionRef.orderBy("lastBlockPolled", "asc").limit(5);
     const querySnapshot = await queryRef.get();
     querySnapshot.forEach((doc) => {
@@ -52,8 +52,8 @@ export class ERC20PollManager {
 }
 
 export class ERC20PollManagerFactory {
-  static async checkContracts(chainId: number, isTestNet: boolean, db: admin.firestore.Firestore): Promise<ERC20PollManager> {
-    const itemToReturn = new ERC20PollManager(chainId, isTestNet);
+	static async checkContracts(eventsDirectory:string, chainId: number, db: admin.firestore.Firestore): Promise<ERC20PollManager> {
+		const itemToReturn = new ERC20PollManager(eventsDirectory, chainId);
     await itemToReturn.checkContracts(db);
     return itemToReturn;
   }

@@ -29,11 +29,11 @@ export class ERC20TransferPoller {
 		try {
 			const contractDoc = await db.collection(this.eventsDirectory).doc('erc20').get();
 			const data = contractDoc.data();
-			const rpc = data?.rpc;
+			const rpcUrl = data?.rpcUrl;
 			this.transferEndpoint = data?.transferEndpoint;
 			this.maxBlocksQuery = data?.maxBlocksQuery || 1000;
-			throwErrorIfUndefined(rpc, "No rpc url found");
-			return new ethers.providers.JsonRpcProvider(rpc);
+			throwErrorIfUndefined(rpcUrl, "No rpc url found");
+			return new ethers.providers.JsonRpcProvider(rpcUrl);
 		} catch (error) {
 			console.log('Error ', error);
 			return;
