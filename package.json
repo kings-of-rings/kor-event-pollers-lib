@@ -1,6 +1,6 @@
 {
   "name": "@kings-of-rings/kor-event-pollers-lib",
-  "version": "0.0.36",
+  "version": "0.0.37",
   "description": "",
   "main": "lib/index.js",
   "publishConfig": {

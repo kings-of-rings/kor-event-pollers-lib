@@ -50,7 +50,7 @@ export class ERC1155PollManager {
   }
 }
 
-export class ERC20PollManagerFactory {
+export class ERC1155PollManagerFactory {
   static async checkContracts(chainId: number, isTestNet: boolean, db: admin.firestore.Firestore): Promise<ERC1155PollManager> {
     const itemToReturn = new ERC1155PollManager(chainId, isTestNet);
     await itemToReturn.checkContracts(db);
