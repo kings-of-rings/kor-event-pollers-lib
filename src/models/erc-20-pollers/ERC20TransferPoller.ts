@@ -8,7 +8,6 @@ export class ERC20TransferPoller {
 	contractAddress: string;
 	chainId: number;
 	lastBlockPolled: number;
-	isTestNet: boolean;
 	eventsDirectory: string;
 	transferEndpoint?: string;
 	maxBlocksQuery = 1000;
@@ -20,8 +19,8 @@ export class ERC20TransferPoller {
 	};
 
 	async pollBlocks(db: admin.firestore.Firestore, apiKey: string) {
-		const provider = await this._getProvider(db);
-		throwErrorIfUndefined(provider, "No provider found");
+		let provider = await this._getProvider(db);
+		provider = throwErrorIfUndefined(provider, "No provider found") as ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider;
 		await this._pollBlocks(provider, db, apiKey);
 	}
 
@@ -70,6 +69,7 @@ export class ERC20TransferPoller {
 
 export class ERC20TransferPollerFactory {
 	static async runPoller(eventsDirectory: string, contractAddress: string, chainId: number, lastBlockPolled: number, db: admin.firestore.Firestore, apiKey: string): Promise<ERC20TransferPoller> {
+		console.log('runPoller ', eventsDirectory, contractAddress, chainId, lastBlockPolled);
 		const pollerInstance = new ERC20TransferPoller(eventsDirectory, contractAddress, chainId, lastBlockPolled);
 		await pollerInstance.pollBlocks(db, apiKey);
 		return pollerInstance;
