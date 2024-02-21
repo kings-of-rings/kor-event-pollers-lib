@@ -2,7 +2,6 @@
 import { AANFTClaimEvent, BANFTClaimEvent, NFTPClaimEvent, TokenDataSet } from "@kings-of-rings/kor-contract-event-data-models/lib";
 import { ethers } from "ethers";
 import * as admin from "firebase-admin";
-import { getEndpoint } from "../../utils/getEndpoint";
 import { throwErrorIfUndefined } from "../../utils/throwErrorUndefined";
 const EVENTS_NFTS_ABI = [
 	"event ClaimRequested(uint256 indexed claimId, address indexed claimingAddress, uint256[] tokenIds)"
@@ -20,7 +19,7 @@ export class SongbirdPollers {
 	rpcUrl: string = "https://songbird-api.flare.network/ext/C/rpc";
 	paused: boolean = false;
 	db: admin.firestore.Firestore;
-	provider: ethers.providers.JsonRpcProvider;
+	provider?: ethers.providers.JsonRpcProvider;
 
 	maxBlocksQuery = 1000;
 	constructor(db: admin.firestore.Firestore) {
@@ -28,17 +27,20 @@ export class SongbirdPollers {
 	};
 
 	async pollBlocks() {
+
 		await this._setProvider();
 		if (!this.paused) {
-			throwErrorIfUndefined(this.provider, "No provider found");
+			this.provider = throwErrorIfUndefined(this.provider, "No provider found") as ethers.providers.JsonRpcProvider;
 			let currentBlock = await this.provider.getBlockNumber() - 1;
+			console.log('Current Block2 ', currentBlock);
 			const difference = currentBlock - this.lastBlockPolled;
+			console.log('difference ', difference);
 			if (difference > this.maxBlocksQuery) {
 				currentBlock = this.lastBlockPolled + this.maxBlocksQuery;
 			}
 			await this._pollBlocksNFTp(currentBlock);
-			await this._pollBlocksNFTp(currentBlock);
-			await this._pollBlocksNFTp(currentBlock);
+			await this._pollBlocksAA(currentBlock);
+			await this._pollBlocksBA(currentBlock);
 			this.lastBlockPolled = currentBlock - 1;	  // update contract last block polled
 			const contractDoc = this.db.collection(`events/pollers/sgb`).doc('claimManagers');
 			await contractDoc.update({
@@ -50,6 +52,7 @@ export class SongbirdPollers {
 
 
 	async _pollBlocksNFTp(currentBlock: number) {
+		console.log('Polling NFTP');
 		const contract = new ethers.Contract(this.nftpClaimManagerAddress, EVENTS_NFTP_ABI, this.provider);
 		const difference = currentBlock - this.lastBlockPolled;
 		if (difference > this.maxBlocksQuery) {
@@ -58,6 +61,8 @@ export class SongbirdPollers {
 		throwErrorIfUndefined(contract, "No contract found");
 		const contractFilter = contract.filters.ClaimRequested();
 		const logs = await contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
+
+		console.log('NFTP Logs ', logs.length);
 		for (const log of logs) {
 			await this._saveNFTPClaimEvent(log);
 		}
@@ -65,6 +70,7 @@ export class SongbirdPollers {
 	}
 
 	async _pollBlocksBA(currentBlock: number) {
+		console.log('Polling BA');
 		const contract = new ethers.Contract(this.baClaimManagerAddress, EVENTS_NFTS_ABI, this.provider);
 		const difference = currentBlock - this.lastBlockPolled;
 		if (difference > this.maxBlocksQuery) {
@@ -73,13 +79,15 @@ export class SongbirdPollers {
 		throwErrorIfUndefined(contract, "No contract found");
 		const contractFilter = contract.filters.ClaimRequested();
 		const logs = await contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
+		console.log('BA Logs ', logs.length);
 		for (const log of logs) {
-			await this._saveNFTPClaimEvent(log);
+			await this._saveBAClaimEvent(log);
 		}
 		return;
 	}
 
 	async _pollBlocksAA(currentBlock: number) {
+		console.log('Polling AA');
 		const contract = new ethers.Contract(this.aaClaimManagerAddress, EVENTS_NFTS_ABI, this.provider);
 		const difference = currentBlock - this.lastBlockPolled;
 		if (difference > this.maxBlocksQuery) {
@@ -88,8 +96,9 @@ export class SongbirdPollers {
 		throwErrorIfUndefined(contract, "No contract found");
 		const contractFilter = contract.filters.ClaimRequested();
 		const logs = await contract.queryFilter(contractFilter, this.lastBlockPolled, currentBlock);
+		console.log('AA Logs ', logs.length);
 		for (const log of logs) {
-			await this._saveNFTPClaimEvent(log);
+			await this._saveAAClaimEvent(log);
 		}
 		return;
 	}
@@ -137,6 +146,7 @@ export class SongbirdPollers {
 
 export class SongbirdPollersFactory {
 	static async runPoller(db: admin.firestore.Firestore): Promise<SongbirdPollers> {
+		console.log('Running Poller');
 		const pollerInstance = new SongbirdPollers(db);
 		await pollerInstance.pollBlocks();
 		return pollerInstance;
