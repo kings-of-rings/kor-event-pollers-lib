@@ -9,15 +9,14 @@ export class ERC20TransferPoller {
 	chainId: number;
 	lastBlockPolled: number;
 	isTestNet: boolean;
-	contractsDir: string;
+	eventsDirectory: string;
 	transferEndpoint?: string;
 	maxBlocksQuery = 1000;
-	constructor(contractAddress: string, chainId: number, lastBlockPolled: number, isTestNet: boolean) {
+	constructor(eventsDirectory: string, contractAddress: string, chainId: number, lastBlockPolled: number) {
 		this.contractAddress = contractAddress.toLowerCase();
 		this.chainId = chainId;
 		this.lastBlockPolled = lastBlockPolled;
-		this.isTestNet = isTestNet;
-		this.contractsDir = isTestNet ? "erc20_testnet" : "erc20_mainnet";
+		this.eventsDirectory = eventsDirectory;
 	};
 
 	async pollBlocks(db: admin.firestore.Firestore, apiKey: string) {
@@ -28,7 +27,7 @@ export class ERC20TransferPoller {
 
 	async _getProvider(db: admin.firestore.Firestore): Promise<ethers.providers.JsonRpcProvider | undefined> {
 		try {
-			const contractDoc = await db.collection("directory").doc(this.contractsDir).get();
+			const contractDoc = await db.collection(this.eventsDirectory).doc('erc20').get();
 			const data = contractDoc.data();
 			const rpc = data?.rpc;
 			this.transferEndpoint = data?.transferEndpoint;
@@ -54,7 +53,7 @@ export class ERC20TransferPoller {
 			await this._saveTransferEvent(log, provider, apiKey);
 		}
 		this.lastBlockPolled = currentBlock;      // update contract last block polled
-		const contractDoc = db.collection(`directory/${this.contractsDir}/contracts`).doc(this.contractAddress);
+		const contractDoc = db.collection(`${this.eventsDirectory}/erc20/contracts`).doc(this.contractAddress);
 		await contractDoc.update({
 			lastBlockPolled: currentBlock,
 		});
@@ -70,8 +69,8 @@ export class ERC20TransferPoller {
 }
 
 export class ERC20TransferPollerFactory {
-	static async runPoller(contractAddress: string, chainId: number, lastBlockPolled: number, isTestNet: boolean, db: admin.firestore.Firestore, apiKey: string): Promise<ERC20TransferPoller> {
-		const pollerInstance = new ERC20TransferPoller(contractAddress, chainId, lastBlockPolled, isTestNet);
+	static async runPoller(eventsDirectory: string, contractAddress: string, chainId: number, lastBlockPolled: number, db: admin.firestore.Firestore, apiKey: string): Promise<ERC20TransferPoller> {
+		const pollerInstance = new ERC20TransferPoller(eventsDirectory, contractAddress, chainId, lastBlockPolled);
 		await pollerInstance.pollBlocks(db, apiKey);
 		return pollerInstance;
 	}

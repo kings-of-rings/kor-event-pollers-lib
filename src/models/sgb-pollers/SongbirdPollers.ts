@@ -146,7 +146,6 @@ export class SongbirdPollers {
 
 export class SongbirdPollersFactory {
 	static async runPoller(db: admin.firestore.Firestore): Promise<SongbirdPollers> {
-		console.log('Running Poller');
 		const pollerInstance = new SongbirdPollers(db);
 		await pollerInstance.pollBlocks();
 		return pollerInstance;
